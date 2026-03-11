@@ -3,8 +3,8 @@ import Link from "next/link";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Credit Card Recommender",
-  description: "Scenario-based credit card ranking for Canadian personal cards.",
+  title: "Canadian Credit Card Comparison",
+  description: "Side-by-side comparison of Canadian personal credit cards.",
 };
 
 export default function RootLayout({
@@ -17,8 +17,8 @@ export default function RootLayout({
       <body>
         <header className="siteHeader">
           <nav className="siteNav">
-            <Link href="/">Home</Link>
-            <Link href="/cards">Cards</Link>
+            <Link href="/">Compare</Link>
+            <Link href="/cards">All Cards</Link>
           </nav>
         </header>
         {children}

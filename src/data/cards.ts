@@ -52,7 +52,10 @@ export const CARDS: Card[] = [
       "Up to $200 annual Amex Travel credit",
       "Up to $200 annual dining credit",
       "Marriott Bonvoy Gold and Hilton Honors Gold on enrollment",
+      "Fine Hotels & Resorts and The Hotel Collection perks when booking through Amex Travel",
+      "Global Entry or NEXUS application fee credit",
       "Comprehensive travel insurance package",
+      "Purchase security and extended warranty on eligible purchases",
     ],
     notes:
       "Multipliers are documented for Canada; foreign category earn can vary by merchant coding.",
@@ -83,7 +86,8 @@ export const CARDS: Card[] = [
         id: "scene-grocery-dining-entertainment",
         rewardType: "POINTS",
         rateMultiplier: 5,
-        description: "5x on other eligible groceries, dining, and entertainment in Canada",
+        description:
+          "5x on other eligible groceries, dining, and entertainment in Canada",
         mccTags: ["groceries", "restaurant"],
         locationScope: "CA_ONLY",
       },
@@ -91,7 +95,8 @@ export const CARDS: Card[] = [
         id: "scene-gas-transit-streaming",
         rewardType: "POINTS",
         rateMultiplier: 3,
-        description: "3x on eligible gas, daily transit, and select streaming services in Canada",
+        description:
+          "3x on eligible gas, daily transit, and select streaming services in Canada",
         mccTags: ["gas", "transit"],
         locationScope: "CA_ONLY",
       },
@@ -104,13 +109,17 @@ export const CARDS: Card[] = [
         locationScope: "WORLDWIDE",
       },
     ],
-    caps: ["6x/5x/3x accelerators on first $50,000 annual accelerated-category spend"],
+    caps: [
+      "6x/5x/3x accelerators on first $50,000 annual accelerated-category spend",
+    ],
     keyBenefits: [
       "No FX fee",
-      "Travel insurance package",
+      "Comprehensive travel insurance (emergency medical, trip cancellation/interruption, flight delay, baggage)",
       "Rental car collision/loss damage coverage",
+      "Purchase security and extended warranty on eligible purchases",
     ],
-    notes: "Issuer frames most accelerator categories in Canadian merchant context.",
+    notes:
+      "Issuer frames most accelerator categories in Canadian merchant context.",
   },
   {
     id: "rogers-world-elite",
@@ -132,14 +141,15 @@ export const CARDS: Card[] = [
         rewardType: "CASHBACK",
         rateMultiplier: 3,
         description: "3% cash back on eligible USD purchases",
-        mccTags: ["general"],
+        mccTags: ["usd-spend"],
         locationScope: "NETWORK_USD",
       },
       {
         id: "rogers-base",
         rewardType: "CASHBACK",
         rateMultiplier: 2,
-        description: "2% cash back for Rogers/Fido/Shaw postpaid customers on CAD purchases",
+        description:
+          "2% cash back for Rogers/Fido/Shaw postpaid customers on CAD purchases",
         mccTags: ["general"],
         locationScope: "WORLDWIDE",
       },
@@ -152,8 +162,11 @@ export const CARDS: Card[] = [
         locationScope: "WORLDWIDE",
       },
     ],
-    keyBenefits: ["50% redemption boost when redeeming to eligible Rogers/Fido/Shaw charges"],
-    notes: "Net on USD spend is roughly 0.5% after 2.5% FX fee before redemption boosts.",
+    keyBenefits: [
+      "50% redemption boost when redeeming to eligible Rogers/Fido/Shaw charges",
+    ],
+    notes:
+      "Net on USD spend is roughly 0.5% after 2.5% FX fee before redemption boosts.",
   },
   {
     id: "triangle-mastercard",
@@ -175,14 +188,15 @@ export const CARDS: Card[] = [
         rewardType: "CASHBACK",
         rateMultiplier: 4,
         description: "4% CT Money at Canadian Tire family stores",
-        mccTags: ["general"],
+        mccTags: ["ct-stores"],
         locationScope: "CA_ONLY",
       },
       {
         id: "triangle-grocery",
         rewardType: "CASHBACK",
         rateMultiplier: 1.5,
-        description: "1.5% CT Money on eligible groceries (excluding Costco/Walmart)",
+        description:
+          "1.5% CT Money on eligible groceries (excluding Costco/Walmart)",
         mccTags: ["groceries"],
         locationScope: "CA_ONLY",
       },
@@ -196,7 +210,11 @@ export const CARDS: Card[] = [
       },
     ],
     caps: ["1.5% grocery rate on first $12,000 annual eligible grocery spend"],
-    notes: "Gas earn is fixed cents-per-litre and not modeled as multiplier.",
+    keyBenefits: [
+      "No-fee financing on qualifying purchases at Canadian Tire group stores",
+      "Personalized offers and bonus CT Money events through Triangle Rewards",
+    ],
+    notes: "Gas earn is fixed cents-per-litre (5¢/L at Canadian Tire Gas+ and partners) and not modeled as a percentage multiplier.",
   },
   {
     id: "cibc-costco-mastercard",
@@ -225,7 +243,8 @@ export const CARDS: Card[] = [
         id: "costco-gas",
         rewardType: "CASHBACK",
         rateMultiplier: 3,
-        description: "3% at eligible Costco and participating gas stations (cap applies)",
+        description:
+          "3% at eligible Costco and participating gas stations (cap applies)",
         mccTags: ["gas"],
         locationScope: "CA_ONLY",
       },
@@ -234,7 +253,7 @@ export const CARDS: Card[] = [
         rewardType: "CASHBACK",
         rateMultiplier: 2,
         description: "2% on other eligible gas and Costco.ca purchases",
-        mccTags: ["gas", "general"],
+        mccTags: ["gas"],
         locationScope: "CA_ONLY",
       },
       {
@@ -247,7 +266,10 @@ export const CARDS: Card[] = [
       },
     ],
     caps: ["Gas and restaurant bonus rates subject to annual spend caps"],
-    keyBenefits: ["Mobile device insurance", "Purchase security and extended warranty"],
+    keyBenefits: [
+      "Mobile device insurance",
+      "Purchase security and extended warranty",
+    ],
     notes: "Cash back paid annually as Costco rewards coupon.",
   },
   {
@@ -269,7 +291,7 @@ export const CARDS: Card[] = [
         id: "td-aircanada",
         rewardType: "POINTS",
         rateMultiplier: 1.5,
-        description: "1.5x on Air Canada and gas/grocery purchases",
+        description: "1.5x on eligible gas and grocery purchases in Canada, and eligible Air Canada / Air Canada Vacations purchases",
         mccTags: ["travel", "gas", "groceries"],
         locationScope: "CA_ONLY",
       },
@@ -283,9 +305,11 @@ export const CARDS: Card[] = [
       },
     ],
     keyBenefits: [
-      "First checked bag free on eligible Air Canada itineraries",
+      "First checked bag free on Air Canada flights for cardholder and up to 8 companions on same booking",
       "Preferred pricing on Aeroplan flight rewards",
-      "Status boost each $10,000 net annual spend",
+      "1,000 SQM + 1 SQS status boost per $10,000 net annual spend",
+      "Comprehensive travel insurance (emergency medical, trip cancellation/interruption, flight delay, baggage, rental car CDW)",
+      "Purchase security and extended warranty on eligible purchases",
     ],
     lounges: [
       {
@@ -312,7 +336,8 @@ export const CARDS: Card[] = [
         id: "passport-scene-grocery-partners",
         rewardType: "POINTS",
         rateMultiplier: 3,
-        description: "3x at participating Scene+ grocery partners and Scene+ Travel hotels/car rentals",
+        description:
+          "3x at participating Scene+ grocery partners and Scene+ Travel hotels/car rentals",
         mccTags: ["groceries", "travel"],
         locationScope: "CA_ONLY",
       },
@@ -320,7 +345,8 @@ export const CARDS: Card[] = [
         id: "passport-category",
         rewardType: "POINTS",
         rateMultiplier: 2,
-        description: "2x on other eligible groceries, dining, entertainment, and daily transit in Canada",
+        description:
+          "2x on other eligible groceries, dining, entertainment, and daily transit in Canada",
         mccTags: ["groceries", "restaurant", "transit"],
         locationScope: "CA_ONLY",
       },
@@ -339,8 +365,14 @@ export const CARDS: Card[] = [
         freeVisitsPerYear: 6,
       },
     ],
-    keyBenefits: ["No FX fee", "6 complimentary lounge visits per year"],
-    notes: "Issuer frames most accelerators in Canadian merchant context outside Scene+ Travel.",
+    keyBenefits: [
+      "No FX fee",
+      "6 complimentary lounge visits per year (Visa Airport Companion)",
+      "Comprehensive travel insurance (emergency medical, trip cancellation/interruption, flight delay, baggage, rental car CDW)",
+      "Purchase security and extended warranty on eligible purchases",
+    ],
+    notes:
+      "Issuer frames most accelerators in Canadian merchant context outside Scene+ Travel.",
   },
   {
     id: "cibc-dividend-vi",
@@ -369,8 +401,9 @@ export const CARDS: Card[] = [
         id: "dividend-transit-dining-recurring",
         rewardType: "CASHBACK",
         rateMultiplier: 2,
-        description: "2% on eligible transportation, dining, and recurring payments",
-        mccTags: ["transit", "restaurant", "general"],
+        description:
+          "2% on eligible transportation, dining, and recurring payments",
+        mccTags: ["transit", "restaurant"],
         locationScope: "CA_ONLY",
       },
       {
@@ -385,6 +418,10 @@ export const CARDS: Card[] = [
     caps: [
       "4% and 2% rates apply on first $20,000 combined annual spend in bonus categories",
       "All purchases earn 1% after $80,000 total annual card spend",
+    ],
+    keyBenefits: [
+      "Travel insurance (emergency medical, trip interruption, flight delay, baggage, rental car CDW, hotel burglary)",
+      "Purchase security and extended warranty on eligible purchases",
     ],
   },
 ];

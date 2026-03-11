@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import styles from "./ScenarioForm.module.css";
 import type {
   MerchantType,
   ScenarioCurrency,
   ScenarioInput,
   ScenarioLocation,
 } from "../logic/selector";
+import styles from "./ScenarioForm.module.css";
 
 interface ScenarioFormProps {
   onSubmit: (scenario: ScenarioInput) => void;
@@ -39,7 +39,9 @@ export default function ScenarioForm({ onSubmit }: ScenarioFormProps) {
         Merchant type
         <select
           value={merchantType}
-          onChange={(event) => setMerchantType(event.target.value as MerchantType)}
+          onChange={(event) =>
+            setMerchantType(event.target.value as MerchantType)
+          }
         >
           <option value="general">General</option>
           <option value="restaurant">Restaurant</option>
@@ -53,7 +55,12 @@ export default function ScenarioForm({ onSubmit }: ScenarioFormProps) {
 
       <label className={styles.label}>
         Location
-        <select value={location} onChange={(event) => setLocation(event.target.value as ScenarioLocation)}>
+        <select
+          value={location}
+          onChange={(event) =>
+            setLocation(event.target.value as ScenarioLocation)
+          }
+        >
           <option value="CANADA">Canada</option>
           <option value="FOREIGN">Foreign</option>
         </select>
@@ -61,7 +68,12 @@ export default function ScenarioForm({ onSubmit }: ScenarioFormProps) {
 
       <label className={styles.label}>
         Currency
-        <select value={currency} onChange={(event) => setCurrency(event.target.value as ScenarioCurrency)}>
+        <select
+          value={currency}
+          onChange={(event) =>
+            setCurrency(event.target.value as ScenarioCurrency)
+          }
+        >
           <option value="CAD">CAD</option>
           <option value="USD">USD</option>
           <option value="OTHER">Other</option>

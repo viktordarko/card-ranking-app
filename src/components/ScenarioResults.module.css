@@ -1,26 +1,26 @@
 .resultsSection {
-  margin-top: 1.25rem;
+    margin-top: 1.25rem;
 }
 
 .resultList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 0.75rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.75rem;
 }
 
 .resultItem {
-  padding: 0.85rem;
-  border: 1px solid #dbe2ea;
-  border-radius: 10px;
-  background: #ffffff;
+    padding: 0.85rem;
+    border: 1px solid #dbe2ea;
+    border-radius: 10px;
+    background: #ffffff;
 }
 
 .resultItem h3 {
-  margin: 0 0 0.4rem;
+    margin: 0 0 0.4rem;
 }
 
 .resultItem p {
-  margin: 0.2rem 0;
+    margin: 0.2rem 0;
 }

@@ -1,22 +1,22 @@
 .table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #ffffff;
-  border: 1px solid #dbe2ea;
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    border: 1px solid #dbe2ea;
 }
 
 .table th,
 .table td {
-  padding: 0.65rem;
-  border: 1px solid #e2e8f0;
-  text-align: left;
-  vertical-align: top;
+    padding: 0.65rem;
+    border: 1px solid #e2e8f0;
+    text-align: left;
+    vertical-align: top;
 }
 
 .table th {
-  background: #f8fafc;
+    background: #f8fafc;
 }
 
 .table a {
-  text-decoration: underline;
+    text-decoration: underline;
 }
