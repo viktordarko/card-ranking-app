@@ -210,7 +210,12 @@ export const CARDS: Card[] = [
       },
     ],
     caps: ["1.5% grocery rate on first $12,000 annual eligible grocery spend"],
-    notes: "Gas earn is fixed cents-per-litre and not modeled as multiplier.",
+    keyBenefits: [
+      "No-fee financing on qualifying purchases at Canadian Tire group stores",
+      "Personalized offers and bonus CT Money events through Triangle Rewards",
+    ],
+    notes:
+      "Gas earn is fixed cents-per-litre (5¢/L at Canadian Tire Gas+ and partners) and not modeled as a percentage multiplier.",
   },
   {
     id: "cibc-costco-mastercard",
@@ -287,7 +292,8 @@ export const CARDS: Card[] = [
         id: "td-aircanada",
         rewardType: "POINTS",
         rateMultiplier: 1.5,
-        description: "1.5x on Air Canada and gas/grocery purchases",
+        description:
+          "1.5x on eligible gas and grocery purchases in Canada, and eligible Air Canada / Air Canada Vacations purchases",
         mccTags: ["travel", "gas", "groceries"],
         locationScope: "CA_ONLY",
       },
