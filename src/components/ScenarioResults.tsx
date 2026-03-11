@@ -1,5 +1,5 @@
-import styles from "./ScenarioResults.module.css";
 import type { ScoredCard } from "../logic/selector";
+import styles from "./ScenarioResults.module.css";
 
 interface ScenarioResultsProps {
   results: ScoredCard[];

@@ -3,39 +3,39 @@ export type RewardType = "MR" | "CASHBACK" | "POINTS";
 export type LocationScope = "CA_ONLY" | "WORLDWIDE" | "NETWORK_USD";
 
 export interface FxPolicy {
-    hasFxFee: boolean;
-    fxFeePercent?: number;
+  hasFxFee: boolean;
+  fxFeePercent?: number;
 }
 
 export interface EarnRate {
-    id: string;
-    rewardType: RewardType;
-    rateMultiplier: number;
-    description: string;
-    mccTags: string[];
-    locationScope: LocationScope;
+  id: string;
+  rewardType: RewardType;
+  rateMultiplier: number;
+  description: string;
+  mccTags: string[];
+  locationScope: LocationScope;
 }
 
 export interface LoungeBenefit {
-    program: string;
-    freeVisitsPerYear: number | "UNLIMITED";
+  program: string;
+  freeVisitsPerYear: number | "UNLIMITED";
 }
 
 export interface Card {
-    id: string;
-    displayName: string;
-    network: Network;
-    issuer: string;
-    rewardCurrency?: string;
-    cardType?: string;
-    minimumIncome?: string;
-    rewardType: RewardType;
-    annualFee: number;
-    additionalCardFee?: number;
-    fxPolicy: FxPolicy;
-    earnRates: EarnRate[];
-    lounges?: LoungeBenefit[];
-    caps?: string[];
-    keyBenefits?: string[];
-    notes?: string;
+  id: string;
+  displayName: string;
+  network: Network;
+  issuer: string;
+  rewardCurrency?: string;
+  cardType?: string;
+  minimumIncome?: string;
+  rewardType: RewardType;
+  annualFee: number;
+  additionalCardFee?: number;
+  fxPolicy: FxPolicy;
+  earnRates: EarnRate[];
+  lounges?: LoungeBenefit[];
+  caps?: string[];
+  keyBenefits?: string[];
+  notes?: string;
 }

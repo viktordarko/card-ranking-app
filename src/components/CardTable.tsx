@@ -1,6 +1,6 @@
 import Link from "next/link";
-import styles from "./CardTable.module.css";
 import type { Card } from "../types/card";
+import styles from "./CardTable.module.css";
 
 interface CardTableProps {
   cards: Card[];
@@ -11,7 +11,9 @@ function formatLoungeSummary(card: Card): string {
     return "None";
   }
 
-  return card.lounges.map((lounge) => `${lounge.program} (${lounge.freeVisitsPerYear})`).join(", ");
+  return card.lounges
+    .map((lounge) => `${lounge.program} (${lounge.freeVisitsPerYear})`)
+    .join(", ");
 }
 
 export default function CardTable({ cards }: CardTableProps) {
@@ -36,7 +38,11 @@ export default function CardTable({ cards }: CardTableProps) {
             <td>{card.network}</td>
             <td>{card.rewardType}</td>
             <td>${card.annualFee}</td>
-            <td>{card.fxPolicy.hasFxFee ? `${card.fxPolicy.fxFeePercent ?? 0}%` : "No FX fee"}</td>
+            <td>
+              {card.fxPolicy.hasFxFee ?
+                `${card.fxPolicy.fxFeePercent ?? 0}%`
+              : "No FX fee"}
+            </td>
             <td>{formatLoungeSummary(card)}</td>
           </tr>
         ))}

@@ -1,10 +1,144 @@
 .main {
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 2rem 1rem 2.5rem;
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 2rem 1rem 3rem;
 }
 
-.description {
-  margin: 0.5rem 0 1rem;
-  color: #334155;
+.heading {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0 0 0.4rem;
+    color: #0f172a;
+}
+
+.subheading {
+    color: #475569;
+    margin: 0 0 1.5rem;
+    font-size: 0.938rem;
+}
+
+/* ── Table wrapper ── */
+
+.tableWrap {
+    overflow-x: auto;
+    border: 1px solid #dbe2ea;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 980px;
+    font-size: 0.85rem;
+}
+
+/* ── Header row ── */
+
+.table thead {
+    background: #1e3a8a;
+    color: #ffffff;
+}
+
+.cornerCell {
+    padding: 0.75rem 1rem;
+    min-width: 130px;
+}
+
+.cardHead {
+    padding: 0.7rem 0.75rem;
+    text-align: center;
+    font-weight: 600;
+    min-width: 120px;
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+    vertical-align: top;
+}
+
+.cardLink {
+    display: block;
+    color: #ffffff;
+    font-size: 0.82rem;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: rgba(255, 255, 255, 0.45);
+    line-height: 1.35;
+}
+
+.cardLink:hover {
+    text-decoration-color: #ffffff;
+}
+
+.cardIssuer {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 0.25rem;
+}
+
+/* ── Row label (first column) ── */
+
+.rowLabel {
+    padding: 0.55rem 1rem;
+    font-weight: 600;
+    font-size: 0.78rem;
+    color: #334155;
+    white-space: nowrap;
+    background: #f1f5f9;
+    border-right: 1px solid #dbe2ea;
+    border-top: 1px solid #e2e8f0;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+}
+
+/* ── Data cells ── */
+
+.cell {
+    padding: 0.55rem 0.6rem;
+    text-align: center;
+    border-left: 1px solid #e2e8f0;
+    border-top: 1px solid #e2e8f0;
+    color: #0f172a;
+    background: #ffffff;
+}
+
+/* Alternating rows */
+.table tbody tr:nth-child(even) .cell {
+    background: #f8fafc;
+}
+
+.table tbody tr:nth-child(even) .rowLabel {
+    background: #e9eef5;
+}
+
+/* Hover */
+.table tbody tr:hover .cell {
+    background: #eff6ff;
+}
+
+.table tbody tr:hover .rowLabel {
+    background: #dbeafe;
+}
+
+/* Best-in-row winner cell */
+.cellBest {
+    background: #dcfce7 !important;
+    color: #15803d !important;
+    font-weight: 700;
+}
+
+/* Highlight rows (key comparison points) */
+.rowHighlight .rowLabel {
+    color: #1e40af;
+}
+
+/* ── Footnote ── */
+
+.footnote {
+    margin-top: 1rem;
+    font-size: 0.775rem;
+    color: #64748b;
+    line-height: 1.65;
+    max-width: 800px;
 }
