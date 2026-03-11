@@ -1,0 +1,10 @@
+.main {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 2rem 1rem 2.5rem;
+}
+
+.description {
+  margin: 0.5rem 0 1rem;
+  color: #334155;
+}

@@ -1,0 +1,37 @@
+.form {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 1px solid #dbe2ea;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.label {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.label select {
+  width: min(320px, 100%);
+  padding: 0.45rem 0.55rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.checkLabel {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.submitButton {
+  width: fit-content;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid #1d4ed8;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}

@@ -1,0 +1,13 @@
+.main {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 2rem 1rem 2.5rem;
+}
+
+.metaRow {
+  color: #334155;
+}
+
+.main section {
+  margin-top: 1rem;
+}
