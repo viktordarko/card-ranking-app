@@ -4,7 +4,7 @@ interface CardDetailsProps {
   card: Card;
 }
 
-export default function CardDetails({ card }: CardDetailsProps) {
+const CardDetails = ({ card }: CardDetailsProps) => {
   return (
     <div>
       <h1>{card.displayName}</h1>
@@ -47,4 +47,6 @@ export default function CardDetails({ card }: CardDetailsProps) {
       )}
     </div>
   );
-}
+};
+
+export default CardDetails;

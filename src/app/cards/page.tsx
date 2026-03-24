@@ -6,7 +6,7 @@ import { CARDS } from "../../data/cards";
 import type { Network, RewardType } from "../../types/card";
 import styles from "./page.module.css";
 
-export default function CardsPage() {
+const CardsPage = () => {
   const [selectedNetworks, setSelectedNetworks] = useState<Network[]>([]);
   const [selectedRewardType, setSelectedRewardType] = useState<
     RewardType | "ALL"
@@ -108,4 +108,6 @@ export default function CardsPage() {
       <CardTable cards={filteredCards} />
     </main>
   );
-}
+};
+
+export default CardsPage;

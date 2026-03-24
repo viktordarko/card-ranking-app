@@ -13,7 +13,7 @@ interface ScenarioFormProps {
   onSubmit: (scenario: ScenarioInput) => void;
 }
 
-export default function ScenarioForm({ onSubmit }: ScenarioFormProps) {
+const ScenarioForm = ({ onSubmit }: ScenarioFormProps) => {
   const [merchantType, setMerchantType] = useState<MerchantType>("general");
   const [location, setLocation] = useState<ScenarioLocation>("CANADA");
   const [currency, setCurrency] = useState<ScenarioCurrency>("CAD");
@@ -103,4 +103,6 @@ export default function ScenarioForm({ onSubmit }: ScenarioFormProps) {
       </button>
     </form>
   );
-}
+};
+
+export default ScenarioForm;

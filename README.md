@@ -42,6 +42,28 @@ npm run build
 npm run start
 ```
 
+## Code Quality
+
+This project uses **oxlint** for fast, strict linting:
+
+```bash
+# Run linter (93 rules, all errors)
+npm run lint
+
+# Auto-fix violations
+npm run lint:fix
+
+# Type checking
+npm run typecheck
+```
+
+**Oxlint Configuration:** `.oxlintrc.json`
+
+- All available rules enabled at error level (maximum strictness)
+- TypeScript strict mode enforced
+- ~100x faster than ESLint
+- ~5ms full codebase scan on 16 files
+
 ## Project Notes
 
 - Card data is currently in `src/data/cards.ts` and can be expanded with real card portfolio data.

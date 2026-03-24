@@ -1,3 +1,4 @@
+import { toEstimatedValuePercent } from "../lib/rewardValuation";
 import type { Card, EarnRate } from "../types/card";
 
 export type MerchantType =
@@ -25,16 +26,17 @@ export interface ScoredCard {
   cardId: string;
   cardName: string;
   effectiveMultiplier: number;
+  effectiveValuePercent: number;
   matchedRateDescription: string;
   fxPolicySummary: string;
   loungeSummary: string;
   card: Card;
 }
 
-function rateEligibleForScenario(
+const rateEligibleForScenario = (
   rate: EarnRate,
   scenario: ScenarioInput,
-): boolean {
+): boolean => {
   if (scenario.location === "CANADA") {
     return (
       rate.locationScope === "CA_ONLY" || rate.locationScope === "WORLDWIDE"
@@ -50,17 +52,17 @@ function rateEligibleForScenario(
   }
 
   return false;
-}
+};
 
-function toFxSummary(card: Card): string {
+const toFxSummary = (card: Card): string => {
   if (!card.fxPolicy.hasFxFee) {
     return "No FX fee";
   }
 
   return `${card.fxPolicy.fxFeePercent ?? 0}% FX fee`;
-}
+};
 
-function toLoungeSummary(card: Card): string {
+const toLoungeSummary = (card: Card): string => {
   if (!card.lounges?.length) {
     return "No lounge access";
   }
@@ -68,12 +70,12 @@ function toLoungeSummary(card: Card): string {
   return card.lounges
     .map((lounge) => `${lounge.program} (${lounge.freeVisitsPerYear})`)
     .join(", ");
-}
+};
 
-export function rankCardsForScenario(
+export const rankCardsForScenario = (
   cards: Card[],
   scenario: ScenarioInput,
-): ScoredCard[] {
+): ScoredCard[] => {
   const filteredCards = cards.filter((card) => {
     if (scenario.requireNoFxFee && card.fxPolicy.hasFxFee) {
       return false;
@@ -97,24 +99,29 @@ export function rankCardsForScenario(
     );
 
     const bestRate = [...matchedRates].sort(
-      (a, b) => b.rateMultiplier - a.rateMultiplier,
+      (a, b) =>
+        toEstimatedValuePercent(card, b) - toEstimatedValuePercent(card, a),
     )[0];
     const fallbackRate = [...eligibleRates].sort(
-      (a, b) => b.rateMultiplier - a.rateMultiplier,
+      (a, b) =>
+        toEstimatedValuePercent(card, b) - toEstimatedValuePercent(card, a),
     )[0];
     const selectedRate = bestRate ?? fallbackRate;
 
     const baseMultiplier = selectedRate?.rateMultiplier ?? 0;
+    const estimatedValueBeforeFx =
+      selectedRate ? toEstimatedValuePercent(card, selectedRate) : 0;
     const fxPenalty =
       scenario.location === "FOREIGN" && card.fxPolicy.hasFxFee ?
-        (card.fxPolicy.fxFeePercent ?? 0) / 100
+        (card.fxPolicy.fxFeePercent ?? 0)
       : 0;
 
     return {
       cardId: card.id,
       cardName: card.displayName,
-      effectiveMultiplier: Number(
-        Math.max(0, baseMultiplier - fxPenalty).toFixed(3),
+      effectiveMultiplier: Number(baseMultiplier.toFixed(3)),
+      effectiveValuePercent: Number(
+        Math.max(0, estimatedValueBeforeFx - fxPenalty).toFixed(3),
       ),
       matchedRateDescription:
         selectedRate?.description ?? "No matching earn rate",
@@ -125,12 +132,12 @@ export function rankCardsForScenario(
   });
 
   scored.sort((a, b) => {
-    if (b.effectiveMultiplier !== a.effectiveMultiplier) {
-      return b.effectiveMultiplier - a.effectiveMultiplier;
+    if (b.effectiveValuePercent !== a.effectiveValuePercent) {
+      return b.effectiveValuePercent - a.effectiveValuePercent;
     }
 
     return a.card.annualFee - b.card.annualFee;
   });
 
   return scored.slice(0, scenario.topN ?? 5);
-}
+};

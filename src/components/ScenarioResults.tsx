@@ -5,7 +5,7 @@ interface ScenarioResultsProps {
   results: ScoredCard[];
 }
 
-export default function ScenarioResults({ results }: ScenarioResultsProps) {
+const ScenarioResults = ({ results }: ScenarioResultsProps) => {
   if (results.length === 0) {
     return null;
   }
@@ -17,7 +17,8 @@ export default function ScenarioResults({ results }: ScenarioResultsProps) {
         {results.map((result) => (
           <li key={result.cardId} className={styles.resultItem}>
             <h3>{result.cardName}</h3>
-            <p>Effective multiplier: {result.effectiveMultiplier}x</p>
+            <p>Estimated net value: {result.effectiveValuePercent}%</p>
+            <p>Matched multiplier: {result.effectiveMultiplier}x</p>
             <p>Matched rate: {result.matchedRateDescription}</p>
             <p>FX policy: {result.fxPolicySummary}</p>
             <p>Lounge: {result.loungeSummary}</p>
@@ -26,4 +27,6 @@ export default function ScenarioResults({ results }: ScenarioResultsProps) {
       </ul>
     </section>
   );
-}
+};
+
+export default ScenarioResults;

@@ -1,3 +1,5 @@
+import type { RewardValueProfileId } from "./rewardValue";
+
 export type Network = "AMEX" | "VISA" | "MASTERCARD";
 export type RewardType = "MR" | "CASHBACK" | "POINTS";
 export type LocationScope = "CA_ONLY" | "WORLDWIDE" | "NETWORK_USD";
@@ -12,6 +14,7 @@ export interface EarnRate {
   rewardType: RewardType;
   rateMultiplier: number;
   description: string;
+  appliesTo?: string;
   mccTags: string[];
   locationScope: LocationScope;
 }
@@ -24,6 +27,8 @@ export interface LoungeBenefit {
 export interface Card {
   id: string;
   displayName: string;
+  shortName?: string;
+  rewardValueProfileId: RewardValueProfileId;
   network: Network;
   issuer: string;
   rewardCurrency?: string;
@@ -36,6 +41,7 @@ export interface Card {
   earnRates: EarnRate[];
   lounges?: LoungeBenefit[];
   caps?: string[];
+  specificBrands?: EarnRate[];
   keyBenefits?: string[];
   notes?: string;
 }

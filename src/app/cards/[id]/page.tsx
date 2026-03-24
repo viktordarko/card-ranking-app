@@ -1,19 +1,24 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CARDS } from "../../../data/cards";
+import {
+  formatRewardRate,
+  formatScopeLabel,
+  formatSpecificBrandRate,
+} from "../../../lib/cardFormatting";
 import styles from "./page.module.css";
 
-export function generateStaticParams() {
+export const generateStaticParams = () => {
   return CARDS.map((card) => ({ id: card.id }));
-}
+};
 
 export const dynamicParams = false;
 
-export default async function CardDetailPage({
+const CardDetailPage = async ({
   params,
 }: {
   params: Promise<{ id: string }>;
-}) {
+}) => {
   const { id } = await params;
   const card = CARDS.find((item) => item.id === id);
 
@@ -93,27 +98,25 @@ export default async function CardDetailPage({
               <tr>
                 <th>Rate</th>
                 <th>Description</th>
+                <th>Applies to</th>
                 <th>Scope</th>
               </tr>
             </thead>
             <tbody>
               {card.earnRates.map((rate) => {
-                const suffix = card.rewardType === "CASHBACK" ? "%" : "×";
-                const scopeLabel =
-                  rate.locationScope === "CA_ONLY" ? "Canada only"
-                  : rate.locationScope === "NETWORK_USD" ? "USD transactions"
-                  : "Worldwide";
                 return (
                   <tr key={rate.id}>
                     <td className={styles.rateCell}>
                       <span className={styles.rateNum}>
-                        {rate.rateMultiplier}
-                        {suffix}
+                        {formatRewardRate(card.rewardType, rate.rateMultiplier)}
                       </span>
                     </td>
                     <td>{rate.description}</td>
+                    <td>{rate.appliesTo ?? "See issuer terms"}</td>
                     <td>
-                      <span className={styles.scopeChip}>{scopeLabel}</span>
+                      <span className={styles.scopeChip}>
+                        {formatScopeLabel(rate.locationScope)}
+                      </span>
                     </td>
                   </tr>
                 );
@@ -187,6 +190,29 @@ export default async function CardDetailPage({
         </section>
       : null}
 
+      {card.specificBrands?.length ?
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Brand-specific boosts</h2>
+          <ul className={styles.benefitList}>
+            {card.specificBrands.map((brandRate) => (
+              <li key={brandRate.id}>
+                <span className={styles.benefitText}>
+                  {brandRate.id}:{" "}
+                  {formatSpecificBrandRate(
+                    card.rewardType,
+                    brandRate.rateMultiplier,
+                    brandRate.description,
+                  )}
+                </span>
+                <span className={styles.visitBadge}>
+                  {brandRate.description}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      : null}
+
       {/* ── Notes ── */}
       {card.notes ?
         <p className={styles.noteSection}>
@@ -196,4 +222,6 @@ export default async function CardDetailPage({
       : null}
     </main>
   );
-}
+};
+
+export default CardDetailPage;

@@ -6,7 +6,7 @@ interface CardTableProps {
   cards: Card[];
 }
 
-function formatLoungeSummary(card: Card): string {
+const formatLoungeSummary = (card: Card): string => {
   if (!card.lounges?.length) {
     return "None";
   }
@@ -14,9 +14,9 @@ function formatLoungeSummary(card: Card): string {
   return card.lounges
     .map((lounge) => `${lounge.program} (${lounge.freeVisitsPerYear})`)
     .join(", ");
-}
+};
 
-export default function CardTable({ cards }: CardTableProps) {
+const CardTable = ({ cards }: CardTableProps) => {
   return (
     <table className={styles.table}>
       <thead>
@@ -49,4 +49,6 @@ export default function CardTable({ cards }: CardTableProps) {
       </tbody>
     </table>
   );
-}
+};
+
+export default CardTable;

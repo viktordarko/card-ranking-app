@@ -17,6 +17,18 @@
     font-size: 0.938rem;
 }
 
+.contextHint {
+    margin: -0.5rem 0 1rem;
+    padding: 0.6rem 0.75rem;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    color: #1e3a8a;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    max-width: 820px;
+}
+
 /* ── Table wrapper ── */
 
 .tableWrap {
@@ -103,6 +115,19 @@
     background: #ffffff;
 }
 
+.primaryValue {
+    display: block;
+    font-weight: 600;
+}
+
+.subValue {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 0.7rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
 /* Alternating rows */
 .table tbody tr:nth-child(even) .cell {
     background: #f8fafc;
@@ -125,6 +150,12 @@
 .cellBest {
     background: #dcfce7 !important;
     color: #15803d !important;
+    font-weight: 700;
+}
+
+.cellWorst {
+    background: #fee2e2 !important;
+    color: #991b1b !important;
     font-weight: 700;
 }
 
