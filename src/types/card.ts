@@ -32,7 +32,6 @@ export interface Card {
   network: Network;
   issuer: string;
   rewardCurrency?: string;
-  cardType?: string;
   minimumIncome?: string;
   rewardType: RewardType;
   annualFee: number;

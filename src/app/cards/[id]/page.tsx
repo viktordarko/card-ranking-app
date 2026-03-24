@@ -50,9 +50,6 @@ const CardDetailPage = async ({
               {card.network}
             </span>
             <span className={styles.badge}>{card.rewardType}</span>
-            {card.cardType && (
-              <span className={styles.badge}>{card.cardType}</span>
-            )}
             {!card.fxPolicy.hasFxFee && (
               <span className={`${styles.badge} ${styles.badgeGreen}`}>
                 No FX Fee
