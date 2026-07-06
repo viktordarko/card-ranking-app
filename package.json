@@ -2,7 +2,6 @@
   "name": "card-ranking-app",
   "version": "1.0.0",
   "private": true,
-  "packageManager": "pnpm@10.22.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,15 +11,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "next": "16.1.6",
-    "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "next": "16.2.10",
+    "react": "19.2.7",
+    "react-dom": "19.2.7"
   },
   "devDependencies": {
-    "@types/node": "24.5.2",
-    "@types/react": "19.2.2",
-    "@types/react-dom": "19.2.2",
-    "typescript": "5.9.2",
-    "oxlint": "^1.56.0"
-  }
+    "@types/node": "26.1.0",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "oxlint": "^1.72.0",
+    "typescript": "6.0.3"
+  },
+  "packageManager": "pnpm@11.5.1"
 }

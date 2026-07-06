@@ -1,5 +1,9 @@
 import type { Card, EarnRate } from "../types/card";
-import { formatRewardRate, formatSpecificBrandRate } from "./cardFormatting";
+import {
+  formatLoungeVisits,
+  formatRewardRate,
+  formatSpecificBrandRate,
+} from "./cardFormatting";
 import {
   getCardValueUnit,
   toEstimatedBaseValuePercent,
@@ -10,24 +14,25 @@ export interface ComparisonCell {
   primary: string;
   detail?: string;
   emphasizePrimary?: boolean;
+  capped?: boolean;
 }
 
 export interface ComparisonRowDef {
   label: string;
   value: (card: Card) => ComparisonCell;
-  highlight?: boolean;
   numericValue?: (card: Card) => number;
   lowerIsBetter?: boolean;
 }
 
 const toCell = (
   primary: string,
-  options?: { detail?: string; emphasizePrimary?: boolean },
+  options?: { detail?: string; emphasizePrimary?: boolean; capped?: boolean },
 ): ComparisonCell => {
   return {
     primary,
     detail: options?.detail,
     emphasizePrimary: options?.emphasizePrimary,
+    capped: options?.capped,
   };
 };
 
@@ -74,9 +79,9 @@ const getDisplayedBaseRate = (card: Card): number => {
 };
 
 const getSortedCategoryRates = (card: Card, tag: string): EarnRate[] => {
-  return [...card.earnRates]
+  return card.earnRates
     .filter((rate) => rate.mccTags.includes(tag))
-    .sort((a, b) => b.rateMultiplier - a.rateMultiplier);
+    .toSorted((a, b) => b.rateMultiplier - a.rateMultiplier);
 };
 
 const getCategoryCell = (card: Card, tag: string): ComparisonCell => {
@@ -104,6 +109,7 @@ const getCategoryCell = (card: Card, tag: string): ComparisonCell => {
       return toCell(primary, {
         detail: `Falls back to ${formatRewardRate(card.rewardType, fallbackDisplayedRate)} on ${fallbackCategoryRate.appliesTo ?? "eligible spend"}`,
         emphasizePrimary: true,
+        capped: bestCategoryRate.capped,
       });
     }
 
@@ -111,10 +117,14 @@ const getCategoryCell = (card: Card, tag: string): ComparisonCell => {
       return toCell(primary, {
         detail: `Falls back to ${formatRewardRate(card.rewardType, bestBaseRate)} on non-bonus spend`,
         emphasizePrimary: true,
+        capped: bestCategoryRate.capped,
       });
     }
 
-    return toCell(primary, { emphasizePrimary: true });
+    return toCell(primary, {
+      emphasizePrimary: true,
+      capped: bestCategoryRate.capped,
+    });
   }
 
   if (bestBaseRate > 0) {
@@ -144,17 +154,7 @@ const getLoungeLabel = (card: Card): string => {
   }
 
   return card.lounges
-    .map((lounge) => {
-      if (lounge.freeVisitsPerYear === "UNLIMITED") {
-        return "Unlimited";
-      }
-
-      if (lounge.freeVisitsPerYear === 0) {
-        return "Paid only";
-      }
-
-      return `${lounge.freeVisitsPerYear}/yr`;
-    })
+    .map((lounge) => formatLoungeVisits(lounge.freeVisitsPerYear))
     .join(", ");
 };
 
@@ -183,7 +183,6 @@ export const COMPARISON_ROWS: ComparisonRowDef[] = [
   {
     label: "Annual fee",
     value: (card) => toCell(`$${card.annualFee}`),
-    highlight: true,
     numericValue: (card) => card.annualFee,
     lowerIsBetter: true,
   },
@@ -207,7 +206,6 @@ export const COMPARISON_ROWS: ComparisonRowDef[] = [
           `${card.fxPolicy.fxFeePercent ?? 2.5}%`
         : "None",
       ),
-    highlight: true,
     numericValue: (card) =>
       card.fxPolicy.hasFxFee ? (card.fxPolicy.fxFeePercent ?? 2.5) : 0,
     lowerIsBetter: true,
@@ -215,38 +213,37 @@ export const COMPARISON_ROWS: ComparisonRowDef[] = [
   {
     label: "USD spend",
     value: (card) => getCategoryCell(card, "usd-spend"),
-    highlight: true,
     numericValue: (card) => getNumericRate(card, "usd-spend"),
   },
   {
     label: "Dining",
     value: (card) => getCategoryCell(card, "restaurant"),
-    highlight: true,
     numericValue: (card) => getNumericRate(card, "restaurant"),
   },
   {
     label: "Groceries",
     value: (card) => getCategoryCell(card, "groceries"),
-    highlight: true,
     numericValue: (card) => getNumericRate(card, "groceries"),
   },
   {
     label: "Gas",
     value: (card) => getCategoryCell(card, "gas"),
-    highlight: true,
     numericValue: (card) => getNumericRate(card, "gas"),
   },
   {
     label: "Travel",
     value: (card) => getCategoryCell(card, "travel"),
-    highlight: true,
     numericValue: (card) => getNumericRate(card, "travel"),
   },
   {
     label: "Transit",
     value: (card) => getCategoryCell(card, "transit"),
-    highlight: true,
     numericValue: (card) => getNumericRate(card, "transit"),
+  },
+  {
+    label: "Entertainment",
+    value: (card) => getCategoryCell(card, "entertainment"),
+    numericValue: (card) => getNumericRate(card, "entertainment"),
   },
   {
     label: "Base earn",
@@ -257,12 +254,16 @@ export const COMPARISON_ROWS: ComparisonRowDef[] = [
   {
     label: "Lounge",
     value: (card) => toCell(getLoungeLabel(card)),
-    highlight: true,
     numericValue: (card) => getLoungeScore(card),
   },
   {
     label: "Brand / partner perks",
     value: (card) => toCell(getSpecificBrandsLabel(card)),
+  },
+  {
+    label: "Redemption",
+    value: (card) => toCell(card.redemption?.label ?? "-"),
+    numericValue: (card) => card.redemption?.flexibility ?? 0,
   },
 ];
 

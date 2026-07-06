@@ -347,3 +347,15 @@
     font-weight: 700;
     color: #475569;
 }
+
+.sourceLine {
+    margin-top: 1.25rem;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.sourceLink {
+    color: #2563eb;
+    text-decoration: underline;
+    word-break: break-word;
+}

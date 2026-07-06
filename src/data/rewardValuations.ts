@@ -22,7 +22,8 @@ export const REWARD_VALUE_PROFILES: RewardValueProfile[] = [
     id: "CASHBACK_ROGERS_BOOSTED",
     label: "Cashback with Rogers/Fido redemption boost",
     centsPerPointOrPercentUnit: 1.5,
-    notes: "Optimistic mode assumes redemption boost can be realized.",
+    notes:
+      "Optimistic: assumes you are a Rogers/Fido/Shaw customer and redeem toward those bills, which unlocks the 1.5x boost. Without it, the value is ~1.0.",
   },
   {
     id: "CASHBACK_STANDARD",
@@ -31,8 +32,9 @@ export const REWARD_VALUE_PROFILES: RewardValueProfile[] = [
   },
   {
     id: "CASHBACK_CONDITIONAL",
-    label: "Conditional cashback",
+    label: "Canadian Tire Money",
     centsPerPointOrPercentUnit: 1.0,
-    notes: "Discounted for constrained redemption utility.",
+    notes:
+      "CT Money is worth 1:1 (1.0), same as cash back. Its downside is redemption, not value: it can only be spent at Canadian Tire family stores. That limitation is modelled separately as redemption flexibility, not as a lower point value.",
   },
 ];

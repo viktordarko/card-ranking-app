@@ -1,11 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CARDS } from "../../../data/cards";
+import { CARDS } from "../../data/cards";
 import {
   formatRewardRate,
   formatScopeLabel,
   formatSpecificBrandRate,
-} from "../../../lib/cardFormatting";
+} from "../../lib/cardFormatting";
+import { getCardValueUnit } from "../../lib/rewardValuation";
 import styles from "./page.module.css";
 
 export const generateStaticParams = () => {
@@ -13,6 +15,24 @@ export const generateStaticParams = () => {
 };
 
 export const dynamicParams = false;
+
+export const generateMetadata = async ({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> => {
+  const { id } = await params;
+  const card = CARDS.find((item) => item.id === id);
+
+  if (!card) {
+    return { title: "Card not found" };
+  }
+
+  return {
+    title: `${card.displayName} — Card details`,
+    description: `Earn rates, fees, and benefits for the ${card.displayName} (${card.issuer}).`,
+  };
+};
 
 const CardDetailPage = async ({
   params,
@@ -131,6 +151,19 @@ const CardDetailPage = async ({
             <span className={styles.metaValue}>{card.rewardCurrency}</span>
           </div>
         )}
+        <div className={styles.metaItem}>
+          <span className={styles.metaLabel}>Est. reward value</span>
+          <span className={styles.metaValue}>
+            {getCardValueUnit(card)}¢ per{" "}
+            {card.rewardType === "CASHBACK" ? "$1" : "point"}
+          </span>
+        </div>
+        {card.redemption && (
+          <div className={styles.metaItem}>
+            <span className={styles.metaLabel}>Redemption</span>
+            <span className={styles.metaValue}>{card.redemption.label}</span>
+          </div>
+        )}
         {card.minimumIncome && (
           <div className={styles.metaItem}>
             <span className={styles.metaLabel}>Minimum income</span>
@@ -215,6 +248,21 @@ const CardDetailPage = async ({
         <p className={styles.noteSection}>
           <span className={styles.noteLabel}>Note: </span>
           {card.notes}
+        </p>
+      : null}
+
+      {/* ── Source ── */}
+      {card.sourceUrl ?
+        <p className={styles.sourceLine}>
+          Rates verified against the official issuer page:{" "}
+          <a
+            className={styles.sourceLink}
+            href={card.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {new URL(card.sourceUrl).hostname}
+          </a>
         </p>
       : null}
     </main>

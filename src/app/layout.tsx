@@ -16,10 +16,15 @@ const RootLayout = ({
     <html lang="en">
       <body>
         <header className="siteHeader">
-          <nav className="siteNav">
-            <Link href="/">Compare</Link>
-            <Link href="/cards">All Cards</Link>
-          </nav>
+          <div className="siteHeaderInner">
+            <Link href="/" className="brand">
+              <span className="brandMark" aria-hidden="true">
+                🍁
+              </span>
+              <span className="brandName">Canadian Card Compare</span>
+            </Link>
+            <span className="brandTag">Rewards, side by side</span>
+          </div>
         </header>
         {children}
       </body>

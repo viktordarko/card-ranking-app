@@ -17,6 +17,10 @@ export const CARDS: Card[] = [
       hasFxFee: true,
       fxFeePercent: 2.5,
     },
+    redemption: {
+      label: "Flexible — transfer partners & travel",
+      flexibility: 4,
+    },
     earnRates: [
       {
         id: "amex-plat-dining",
@@ -61,6 +65,8 @@ export const CARDS: Card[] = [
     ],
     notes:
       "Multipliers are documented for Canada; foreign category earn can vary by merchant coding. Minimum yearly spends are changing to achieve unlimited lounge access starting in 2027.",
+    sourceUrl:
+      "https://www.americanexpress.com/en-ca/charge-cards/the-platinum-card/",
   },
   {
     id: "scotia-gold-amex",
@@ -76,6 +82,10 @@ export const CARDS: Card[] = [
     fxPolicy: {
       hasFxFee: false,
     },
+    redemption: {
+      label: "Scene+ — travel, groceries, dining",
+      flexibility: 3,
+    },
     earnRates: [
       {
         id: "scene-empire-groceries",
@@ -85,27 +95,27 @@ export const CARDS: Card[] = [
         appliesTo: "Scene+ grocery partner stores",
         mccTags: ["groceries"],
         locationScope: "CA_ONLY",
+        capped: true,
       },
       {
         id: "scene-grocery-dining-entertainment",
         rewardType: "POINTS",
         rateMultiplier: 5,
-        description:
-          "5x on other groceries, dining, and entertainment in Canada",
-        appliesTo:
-          "Other groceries, dining, and entertainment merchants in Canada",
-        mccTags: ["groceries", "restaurant"],
+        description: "5x on other groceries, dining, and entertainment in Canada",
+        appliesTo: "Other groceries, dining, and entertainment merchants in Canada",
+        mccTags: ["groceries", "restaurant", "entertainment"],
         locationScope: "CA_ONLY",
+        capped: true,
       },
       {
         id: "scene-gas-transit-streaming",
         rewardType: "POINTS",
         rateMultiplier: 3,
-        description:
-          "3x on gas, daily transit, and select streaming services in Canada",
+        description: "3x on gas, daily transit, and select streaming services in Canada",
         appliesTo: "Gas, daily transit and streaming services in Canada",
         mccTags: ["gas", "transit"],
         locationScope: "CA_ONLY",
+        capped: true,
       },
       {
         id: "scene-base",
@@ -116,9 +126,7 @@ export const CARDS: Card[] = [
         locationScope: "WORLDWIDE",
       },
     ],
-    caps: [
-      "6x/5x/3x accelerators on first $50,000 annual accelerated-category spend",
-    ],
+    caps: ["6x/5x/3x accelerators on first $50,000 annual accelerated-category spend"],
     specificBrands: [
       {
         id: "IGA",
@@ -135,8 +143,9 @@ export const CARDS: Card[] = [
       "Rental car collision/loss damage coverage",
       "Purchase security and extended warranty on eligible purchases",
     ],
-    notes:
-      "Issuer frames most accelerator categories in Canadian merchant context.",
+    notes: "Issuer frames most accelerator categories in Canadian merchant context.",
+    sourceUrl:
+      "https://www.scotiabank.com/ca/en/personal/credit-cards/american-express/gold-card.html",
   },
   {
     id: "rogers-world-elite",
@@ -153,6 +162,10 @@ export const CARDS: Card[] = [
       hasFxFee: true,
       fxFeePercent: 2.5,
     },
+    redemption: {
+      label: "Best value toward Rogers/Fido/Shaw bills",
+      flexibility: 2,
+    },
     earnRates: [
       {
         id: "rogers-usd",
@@ -160,10 +173,10 @@ export const CARDS: Card[] = [
         rateMultiplier: 3,
         description:
           "3% cash back on USD purchases, extra 1.5x if redeemed for Rogers/Fido/Shaw charges",
-        appliesTo:
-          "USD purchases when rewards are redeemed to Rogers/Fido/Shaw services",
+        appliesTo: "USD purchases when rewards are redeemed to Rogers/Fido/Shaw services",
         mccTags: ["usd-spend"],
         locationScope: "NETWORK_USD",
+        capped: true,
       },
       {
         id: "rogers-base",
@@ -187,9 +200,10 @@ export const CARDS: Card[] = [
         locationScope: "WORLDWIDE",
       },
     ],
-    keyBenefits: [
-      "50% redemption boost when redeeming to Rogers/Fido/Shaw charges",
+    caps: [
+      "Accelerated cash back is capped at $61,000 in annual spend effective August 4, 2026; all purchases earn 1.5% after the cap",
     ],
+    keyBenefits: ["50% redemption boost when redeeming to Rogers/Fido/Shaw charges"],
     specificBrands: [
       {
         id: "Rogers / Fido redemption (applied to values above)",
@@ -201,7 +215,8 @@ export const CARDS: Card[] = [
       },
     ],
     notes:
-      "Net on USD spend is roughly 2% after 2.5% FX fee when redeemed for Rogers/Fido/Shaw charges.",
+      "Boosted values assume you are a Rogers/Fido/Shaw customer and redeem cash back toward those bills, which unlocks the 1.5x redemption boost; otherwise the effective redemption value is about 1%. Net on USD spend is roughly 2% after the 2.5% FX fee.",
+    sourceUrl: "https://www.rogersbank.com/en/World-Elite-Annual-Value/",
   },
   {
     id: "triangle-mastercard",
@@ -217,6 +232,10 @@ export const CARDS: Card[] = [
     fxPolicy: {
       hasFxFee: true,
       fxFeePercent: 2.5,
+    },
+    redemption: {
+      label: "Canadian Tire family stores only",
+      flexibility: 1,
     },
     earnRates: [
       {
@@ -234,6 +253,7 @@ export const CARDS: Card[] = [
         description: "1.5% CT Money on groceries (excluding Costco/Walmart)",
         mccTags: ["groceries"],
         locationScope: "CA_ONLY",
+        capped: true,
       },
       {
         id: "triangle-base",
@@ -254,14 +274,15 @@ export const CARDS: Card[] = [
         id: "Petro-Canada",
         rewardType: "CASHBACK",
         rateMultiplier: 0.05,
-        description:
-          "5 cents per litre CT Money at Petro-Canada and Canadian Tire gas stations",
+        description: "5 cents per litre CT Money at Petro-Canada and Canadian Tire gas stations",
         mccTags: ["gas"],
         locationScope: "CA_ONLY",
       },
     ],
     notes:
       "Gas earn is fixed cents-per-litre (5¢/L at Petro-Canada and Gas+). CT Money can only be redeemed at Canadian Tire family stores 1:1",
+    sourceUrl:
+      "https://triangle.canadiantire.ca/en/credit-cards/triangle-mastercard.html",
   },
   {
     id: "cibc-costco-mastercard",
@@ -277,6 +298,10 @@ export const CARDS: Card[] = [
     fxPolicy: {
       hasFxFee: true,
       fxFeePercent: 2.5,
+    },
+    redemption: {
+      label: "Annual coupon, redeemed at Costco",
+      flexibility: 5,
     },
     earnRates: [
       {
@@ -295,6 +320,7 @@ export const CARDS: Card[] = [
         appliesTo: "Costco gas stations",
         mccTags: ["gas"],
         locationScope: "CA_ONLY",
+        capped: true,
       },
       {
         id: "costco-gas-secondary",
@@ -304,6 +330,7 @@ export const CARDS: Card[] = [
         appliesTo: "Other gas stations and Costco.ca",
         mccTags: ["gas"],
         locationScope: "CA_ONLY",
+        capped: true,
       },
       {
         id: "costco-base",
@@ -324,12 +351,16 @@ export const CARDS: Card[] = [
         locationScope: "CA_ONLY",
       },
     ],
-    caps: ["$8,000 annual spend per category"],
-    keyBenefits: [
-      "Mobile device insurance",
-      "Purchase security and extended warranty",
+    caps: [
+      "Gas and EV charging (3% at Costco gas, 2% elsewhere) earn the accelerated rate on the first $5,000 in annual spend, then 1%",
+      "Costco.ca (2%) earns the accelerated rate on the first $8,000 in annual spend, then 1%",
+      "Restaurant 3% cash back has no annual cap",
     ],
-    notes: "Cash back paid annually as Costco rewards coupon.",
+    keyBenefits: ["Mobile device insurance", "Purchase security and extended warranty"],
+    notes:
+      "Cash back is paid once a year as a Costco certificate. Officially it is redeemed toward Costco purchases, but the warehouse register pays out any amount above your purchase in cash, so in practice it is cashable — which is why its redemption flexibility is rated as high as cash.",
+    sourceUrl:
+      "https://www.cibc.com/en/personal-banking/credit-cards/all-credit-cards/costco-mastercard.html",
   },
   {
     id: "td-aeroplan-vi",
@@ -346,15 +377,19 @@ export const CARDS: Card[] = [
       hasFxFee: true,
       fxFeePercent: 2.5,
     },
+    redemption: {
+      label: "Air Canada & Star Alliance flights",
+      flexibility: 3,
+    },
     earnRates: [
       {
-        id: "td-aircanada",
+        id: "td-gas-grocery",
         rewardType: "POINTS",
         rateMultiplier: 1.5,
-        description:
-          "1.5x on gas and grocery purchases in Canada, and Air Canada / Air Canada Vacations purchases",
-        mccTags: ["travel", "gas", "groceries"],
+        description: "1.5x on gas, EV charging, and grocery purchases in Canada",
+        mccTags: ["gas", "groceries"],
         locationScope: "CA_ONLY",
+        capped: true,
       },
       {
         id: "td-base",
@@ -362,6 +397,19 @@ export const CARDS: Card[] = [
         rateMultiplier: 1,
         description: "1x base earn worldwide",
         mccTags: ["general"],
+        locationScope: "WORLDWIDE",
+      },
+    ],
+    caps: [
+      "1.5x earn applies to the first $80,000 in annual eligible gas, EV charging, grocery, and Air Canada purchases; 1x after",
+    ],
+    specificBrands: [
+      {
+        id: "Air Canada",
+        rewardType: "POINTS",
+        rateMultiplier: 1.5,
+        description: "1.5x on Air Canada and Air Canada Vacations purchases",
+        mccTags: ["travel"],
         locationScope: "WORLDWIDE",
       },
     ],
@@ -373,6 +421,8 @@ export const CARDS: Card[] = [
       "Purchase security and extended warranty on eligible purchases",
       "NEXUS application fee credit",
     ],
+    sourceUrl:
+      "https://www.td.com/ca/en/personal-banking/products/credit-cards/aeroplan/aeroplan-visa-infinite-card",
   },
   {
     id: "scotia-passport-vi",
@@ -388,6 +438,10 @@ export const CARDS: Card[] = [
     fxPolicy: {
       hasFxFee: false,
     },
+    redemption: {
+      label: "Scene+ — travel, groceries, dining",
+      flexibility: 3,
+    },
     earnRates: [
       {
         id: "passport-scene-grocery-partners",
@@ -397,6 +451,7 @@ export const CARDS: Card[] = [
         appliesTo: "Scene+ grocery partner stores",
         mccTags: ["groceries"],
         locationScope: "CA_ONLY",
+        capped: true,
       },
       {
         id: "passport-scene-travel-hotels-cars",
@@ -411,11 +466,11 @@ export const CARDS: Card[] = [
         id: "passport-category",
         rewardType: "POINTS",
         rateMultiplier: 2,
-        description:
-          "2x on other groceries, dining, entertainment, and daily transit",
+        description: "2x on other groceries, dining, entertainment, and daily transit",
         appliesTo: "Other groceries, dining, entertainment, and daily transit",
-        mccTags: ["groceries", "restaurant", "transit"],
+        mccTags: ["groceries", "restaurant", "transit", "entertainment"],
         locationScope: "WORLDWIDE",
+        capped: true,
       },
       {
         id: "passport-base",
@@ -432,6 +487,9 @@ export const CARDS: Card[] = [
         freeVisitsPerYear: 6,
       },
     ],
+    caps: [
+      "3x and 2x accelerated earn applies to the first $50,000 in annual eligible purchases; 1x after",
+    ],
     keyBenefits: [
       "No FX fee",
       "6 complimentary lounge visits per year (Visa Airport Companion)",
@@ -439,6 +497,8 @@ export const CARDS: Card[] = [
       "Purchase security and extended warranty on eligible purchases",
       "Accelerators seem to work worldwide if merchant is coded in eligible category",
     ],
+    sourceUrl:
+      "https://www.scotiabank.com/ca/en/personal/credit-cards/visa/passport-infinite-card.html",
   },
   {
     id: "cibc-dividend-vi",
@@ -455,6 +515,10 @@ export const CARDS: Card[] = [
       hasFxFee: true,
       fxFeePercent: 2.5,
     },
+    redemption: {
+      label: "Statement credit",
+      flexibility: 4,
+    },
     earnRates: [
       {
         id: "dividend-gas-grocery-ev",
@@ -464,15 +528,16 @@ export const CARDS: Card[] = [
           "4% on gas, EV charging, and grocery purchases, $0.10 off per litre at Ultramar",
         mccTags: ["gas", "groceries"],
         locationScope: "CA_ONLY",
+        capped: true,
       },
       {
         id: "dividend-transit-dining-recurring",
         rewardType: "CASHBACK",
         rateMultiplier: 2,
-        description:
-          "2% on eligible transportation, dining, and recurring payments",
+        description: "2% on eligible transportation, dining, and recurring payments",
         mccTags: ["transit", "restaurant"],
         locationScope: "CA_ONLY",
+        capped: true,
       },
       {
         id: "dividend-base",
@@ -502,5 +567,7 @@ export const CARDS: Card[] = [
       "Purchase security and extended warranty on eligible purchases",
       "10 cents per litre discount at Ultramar stations",
     ],
+    sourceUrl:
+      "https://www.cibc.com/en/personal-banking/credit-cards/all-credit-cards/dividend-visa-infinite-card.html",
   },
 ];

@@ -1,0 +1,248 @@
+# Architecture
+
+This document explains how the app is structured, how the domain is modeled, and
+how the reward-valuation and comparison logic work. For setup and scripts, see the
+[README](./README.md).
+
+## Overview
+
+The app is a **fully static** Next.js (App Router) site. There is no backend, no
+database, and no runtime data fetching. All credit-card data lives in versioned
+TypeScript files, and every page is prerendered at build time.
+
+The codebase is deliberately layered so that **data**, **domain logic**, and
+**presentation** stay independent:
+
+```
+  data (typed card records)
+        │
+        ▼
+  types (shared domain model)
+        │
+        ▼
+  lib (pure valuation / comparison / formatting functions)
+        │
+        ▼
+  app + components (React Server/Client Components)
+```
+
+Everything below `app/` is presentation. Everything in `lib/` is pure functions
+with no React or Next.js imports, which keeps the ranking/valuation logic easy to
+reason about and unit-testable in isolation.
+
+## Directory layout
+
+```
+src/
+├── app/                      # Next.js App Router (routes + layout)
+│   ├── layout.tsx            # Root layout, site header, global metadata
+│   ├── globals.css           # Global reset + site chrome styles
+│   ├── page.tsx              # "/"  — page shell (Server Component)
+│   ├── page.module.css
+│   └── [id]/
+│       ├── page.tsx          # "/[id]" — card detail (SSG + generateMetadata)
+│       └── page.module.css
+├── components/
+│   ├── ComparisonMatrix.tsx  # "/" client island: filters + comparison table
+│   └── ComparisonMatrix.module.css
+├── data/
+│   ├── cards.ts              # The card portfolio (source of truth)
+│   └── rewardValuations.ts   # Reward-currency → value profiles
+├── lib/
+│   ├── rewardValuation.ts    # Points/cashback → estimated % value
+│   ├── cardComparison.ts     # Comparison-matrix rows + best/worst highlighting
+│   └── cardFormatting.ts     # Display formatting helpers
+└── types/
+    ├── card.ts               # Card, EarnRate, FxPolicy, LoungeBenefit, …
+    └── rewardValue.ts        # RewardValueProfile + profile ids
+```
+
+## Domain model
+
+The domain model lives in [`src/types`](./src/types) and is the contract every
+other layer depends on.
+
+### `Card` ([`types/card.ts`](./src/types/card.ts))
+
+A `Card` describes one credit card: its issuer, network, reward type, fees, FX
+policy, and a list of **earn rates**. Notable fields:
+
+| Field | Purpose |
+| --- | --- |
+| `rewardType` | `"MR" \| "CASHBACK" \| "POINTS"` — drives how rates are displayed (`x` vs `%`). |
+| `rewardValueProfileId` | Links the card to a `RewardValueProfile` used to convert points/cashback into an estimated cash value. |
+| `annualFee` / `additionalCardFee` | Used directly in the comparison matrix. |
+| `fxPolicy` | `{ hasFxFee, fxFeePercent? }` — foreign-transaction fee. |
+| `earnRates` | The list of `EarnRate`s (see below). |
+| `lounges`, `caps`, `specificBrands`, `keyBenefits`, `notes` | Optional benefit metadata shown on the detail page. |
+
+### `EarnRate`
+
+Each `EarnRate` captures a single earning rule:
+
+- `rateMultiplier` — the multiplier (`2` for 2x points) or percentage (`3` for 3%).
+- `mccTags` — merchant categories the rate applies to (e.g. `"restaurant"`,
+  `"groceries"`, `"gas"`, `"travel"`, `"transit"`, `"usd-spend"`, or `"general"`
+  for base earn).
+- `locationScope` — `"CA_ONLY" | "WORLDWIDE" | "NETWORK_USD"`, which governs where
+  the rate is eligible.
+
+### `RewardValueProfile` ([`types/rewardValue.ts`](./src/types/rewardValue.ts))
+
+A profile assigns a **cents-per-point** (for points/MR) or a **percent-unit
+multiplier** (for cashback) to a reward currency, plus notes explaining the
+assumption. Profiles are defined in
+[`data/rewardValuations.ts`](./src/data/rewardValuations.ts) — for example
+`MR_AMEX = 2.0¢`, `SCENE_PLUS = 1.0¢`, `CASHBACK_ROGERS_BOOSTED = 1.5×`.
+
+Keeping valuations in one place means changing "how much an Aeroplan point is
+worth" is a one-line edit that ripples through the whole comparison.
+
+## Reward valuation ([`lib/rewardValuation.ts`](./src/lib/rewardValuation.ts))
+
+Different cards earn in different currencies, so to compare them fairly every earn
+rate is normalized to an **estimated percentage of cash value**:
+
+```
+estimatedValuePercent = rateMultiplier × profile.centsPerPointOrPercentUnit
+```
+
+Examples:
+
+- A `2x` Membership Rewards rate at `2.0¢/pt` → **4%** estimated value.
+- A `3%` standard cashback rate at `1.0×` → **3%** estimated value.
+- A `3%` Rogers USD rate at the boosted `1.5×` profile → **4.5%** estimated value.
+
+`toEstimatedBaseValuePercent` does the same for a card's best `"general"`
+(non-bonus) rate, which is used as the fallback "base earn" figure.
+
+> The valuations are intentionally conservative baselines. Point currencies like
+> Membership Rewards and Aeroplan can be worth substantially more with optimal
+> transfer-partner redemptions; the profile `notes` document these assumptions.
+
+### Value vs. redemption flexibility
+
+The point value answers **"how much is a unit worth?"** — deliberately *not* **"how
+easy is it to redeem?"** Conflating the two is misleading, so they are modelled as
+separate layers:
+
+- **Canadian Tire Money** is worth a full **1.0¢** (1:1), the same as cash back —
+  but it can only be spent at Canadian Tire. That is a *redemption* limitation, not
+  a lower value, so it lives on the card (`redemption.flexibility`), **not** in the
+  point value.
+- **Rogers** cash back genuinely *is* worth **1.5¢** — but only when redeemed
+  toward Rogers/Fido/Shaw bills. That is a real (conditional) value, so it stays in
+  the point value, with the condition surfaced in the card's `notes`.
+
+Each card carries a `redemption` descriptor (`types/card.ts`) scored **1–5**, ranked
+by *where you can direct the value* — not by how much it is worth:
+
+| Score | Meaning | Example |
+| --- | --- | --- |
+| 5 | Cash, or a certificate you can cash out | CIBC Costco — the warehouse register pays any overage in cash |
+| 4 | Statement credit, or points transferable to partners | Amex MR, CIBC Dividend |
+| 3 | Program points (travel / groceries within a program) | Scene+, Aeroplan |
+| 2 | Conditional — full value only in a narrow way | Rogers — toward Rogers/Fido/Shaw bills |
+| 1 | A single specific retailer, non-cashable | Triangle — Canadian Tire Money |
+
+The comparison's **Redemption** row shows the label and highlights the score as a
+tiebreaker, independent of the earn-value ranking. This is why Costco and Triangle —
+both "store" rewards worth a full 1.0¢ on earn value — sit at opposite ends: the
+Costco certificate is effectively cashable, while CT Money is locked to Canadian
+Tire.
+
+## Comparison matrix ([`lib/cardComparison.ts`](./src/lib/cardComparison.ts))
+
+The home page renders a matrix of **cards (columns) × attributes (rows)**. The row
+model lives in `lib/`; the interactive UI lives in the
+[`ComparisonMatrix`](./src/components/ComparisonMatrix.tsx) client component (see
+[Rendering strategy](#rendering-strategy)). Each row is described declaratively by
+a `ComparisonRowDef`:
+
+```ts
+interface ComparisonRowDef {
+  label: string;
+  value: (card: Card) => ComparisonCell;   // what to display
+  highlight?: boolean;                      // shade this row
+  numericValue?: (card: Card) => number;    // basis for best/worst
+  lowerIsBetter?: boolean;                  // e.g. fees
+}
+```
+
+`COMPARISON_ROWS` defines the rows: Network, Reward currency, Annual fee, Auth card
+fee, FX fee, USD spend, Dining, Groceries, Gas, Travel, Transit, Entertainment, Base
+earn, Lounge, Brand/partner perks, and Redemption. Category cells whose accelerated
+rate reverts past an annual spend cap (`EarnRate.capped`) show a small **capped**
+badge, since the headline is an "up to" rate.
+
+Two details worth highlighting:
+
+- **Native units, normalized ranking.** A cell *displays* values in each card's
+  own units (`5x` for points, `3%` for cashback) via `cardFormatting`, but the
+  best/worst comparison uses the normalized `numericValue` (estimated % value or
+  raw fee), so a points card and a cashback card can be compared apples-to-apples.
+- **Best / worst highlighting.** `computeRowWinners` and `computeRowWorst`
+  (both thin wrappers over `computeRowExtremes`) compute, per numeric row, the set
+  of card ids holding the best and worst value — respecting `lowerIsBetter` for fee
+  rows. Ties share the highlight. `ComparisonMatrix` recomputes these over the
+  **currently filtered** cards (and skips highlighting when fewer than two cards are
+  shown), so "best in row" always reflects what's on screen.
+
+Category cells also surface **fallback behavior** — e.g. "5x … falls back to 1x on
+non-bonus spend" — so a headline rate is never shown without its caveat.
+
+## Formatting ([`lib/cardFormatting.ts`](./src/lib/cardFormatting.ts))
+
+Small, pure display helpers: reward-rate suffixes (`x` vs `%`), per-litre gas
+rebates (`+$0.05/L`), and human-readable location-scope labels. Isolating these
+keeps the components free of formatting branches.
+
+## Rendering strategy
+
+| Route | File | Rendering |
+| --- | --- | --- |
+| `/` | [`app/page.tsx`](./src/app/page.tsx) | Static **Server Component** shell (heading + metadata) that renders the [`ComparisonMatrix`](./src/components/ComparisonMatrix.tsx) **client island**. Filtering (network, reward type, no-FX, lounge) and best/worst recomputation run in the browser with `useState` / `useMemo`; the initial HTML is prerendered at build time. |
+| `/[id]` | [`app/[id]/page.tsx`](./src/app/[id]/page.tsx) | SSG. `generateStaticParams` prerenders one page per card and `generateMetadata` gives each its own `<title>`; `dynamicParams = false` returns 404 for unknown ids. Static routes (`/`) take precedence over the dynamic segment. |
+
+Because all data is local and known at build time, `next build` prerenders every
+route to static HTML (see the route table in the build output). Deploy it to any
+Next.js-compatible host (e.g. Vercel), or add `output: "export"` to
+[`next.config.ts`](./next.config.ts) to produce a pure static bundle for any CDN.
+
+## Styling
+
+- **CSS Modules** (`*.module.css`) scope styles per component/route.
+- A single [`globals.css`](./src/app/globals.css) provides the reset and site
+  chrome (header/nav).
+- No CSS framework or runtime CSS-in-JS; styling is compiled by Next.js's built-in
+  CSS pipeline.
+
+## Tooling
+
+- **[oxlint](https://oxc.rs/docs/guide/usage/linter)** for linting — configured in
+  [`.oxlintrc.json`](./.oxlintrc.json). The `correctness` and `suspicious` rule
+  categories run at error level across the TypeScript, React, Next.js, Promise,
+  Unicorn, and **jsx-a11y** (accessibility) plugins, plus a curated set of stricter
+  rules enabled explicitly: `no-explicit-any`, `no-non-null-assertion`,
+  `consistent-type-imports`, and `eqeqeq`.
+
+  > The whole `pedantic` / `style` / `restriction` categories are intentionally
+  > **not** enabled: they contain opinionated and mutually contradictory rules
+  > (e.g. `no-default-export` vs `prefer-default-export`, `sort-keys`,
+  > `no-magic-numbers`, `jsx-no-literals`) that fight this app's data-driven design
+  > rather than catch real defects. Strictness here means high-signal rules, not
+  > maximum noise.
+
+- **`tsc --noEmit`** for type checking, in TypeScript `strict` mode **plus**
+  `noUncheckedIndexedAccess`, `noImplicitOverride`, `noFallthroughCasesInSwitch`,
+  `noUnusedLocals`, and `noUnusedParameters` (see [`tsconfig.json`](./tsconfig.json)).
+
+## Extending the app
+
+- **Add a card:** append a `Card` object to
+  [`data/cards.ts`](./src/data/cards.ts). It automatically appears in the matrix
+  (and its filters) and gets its own statically generated detail page.
+- **Retune valuations:** edit the relevant profile in
+  [`data/rewardValuations.ts`](./src/data/rewardValuations.ts).
+- **Add a comparison row:** push a new `ComparisonRowDef` onto `COMPARISON_ROWS` in
+  [`lib/cardComparison.ts`](./src/lib/cardComparison.ts).

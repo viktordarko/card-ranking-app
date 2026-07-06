@@ -29,6 +29,20 @@ export const formatSpecificBrandRate = (
   return formatRewardRate(rewardType, rateMultiplier);
 };
 
+export const formatLoungeVisits = (
+  freeVisitsPerYear: number | "UNLIMITED",
+): string => {
+  if (freeVisitsPerYear === "UNLIMITED") {
+    return "Unlimited";
+  }
+
+  if (freeVisitsPerYear === 0) {
+    return "Paid only";
+  }
+
+  return `${freeVisitsPerYear}/yr`;
+};
+
 export const formatScopeLabel = (scope: LocationScope): string => {
   if (scope === "CA_ONLY") {
     return "Canada only";
