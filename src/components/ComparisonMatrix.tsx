@@ -1,9 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useReducer } from "react";
 import { COMPARISON_ROWS, computeRowWinners, computeRowWorst } from "../lib/cardComparison";
 import type { Card, Network, RewardType } from "../types/card";
+import ActiveFilters, { type ActiveFilter } from "./ActiveFilters";
+import CardPicker from "./CardPicker";
+import { filterReducer, initFilterState } from "./comparisonFilters";
+import FilterBar, { type RewardOption } from "./FilterBar";
+import MatrixTable from "./MatrixTable";
 import styles from "./ComparisonMatrix.module.css";
 
 interface ComparisonMatrixProps {
@@ -13,17 +17,31 @@ interface ComparisonMatrixProps {
 // Parallel to COMPARISON_ROWS; used when there is nothing to rank against.
 const EMPTY_ROW_SETS: Set<string>[] = COMPARISON_ROWS.map(() => new Set<string>());
 
+const REWARD_OPTIONS: RewardOption[] = [
+  { value: "ALL", label: "All reward types" },
+  { value: "MR", label: "Membership Rewards" },
+  { value: "CASHBACK", label: "Cashback" },
+  { value: "POINTS", label: "Points" },
+];
+
 const ComparisonMatrix = ({ cards }: ComparisonMatrixProps) => {
-  const [selectedNetworks, setSelectedNetworks] = useState<Network[]>([]);
-  const [selectedRewardType, setSelectedRewardType] = useState<RewardType | "ALL">("ALL");
-  const [requireNoFxFee, setRequireNoFxFee] = useState(false);
-  const [requireLoungeAccess, setRequireLoungeAccess] = useState(false);
+  const [filters, dispatch] = useReducer(filterReducer, cards, initFilterState);
+  const { selectedIds, selectedNetworks, selectedRewardType, requireNoFxFee, requireLoungeAccess } =
+    filters;
 
   const networks = useMemo(() => Array.from(new Set(cards.map((card) => card.network))), [cards]);
+
+  const toggleNetwork = (network: Network, checked: boolean) =>
+    dispatch({ type: "toggleNetwork", network, checked });
+
+  const noneSelected = selectedIds.size === 0;
 
   const filteredCards = useMemo(
     () =>
       cards.filter((card) => {
+        if (!selectedIds.has(card.id)) {
+          return false;
+        }
         if (selectedNetworks.length > 0 && !selectedNetworks.includes(card.network)) {
           return false;
         }
@@ -38,8 +56,99 @@ const ComparisonMatrix = ({ cards }: ComparisonMatrixProps) => {
         }
         return true;
       }),
-    [cards, selectedNetworks, selectedRewardType, requireNoFxFee, requireLoungeAccess],
+    [cards, selectedIds, selectedNetworks, selectedRewardType, requireNoFxFee, requireLoungeAccess],
   );
+
+  // Faceted availability: for each filter option, how many *picked* cards would
+  // remain if it were applied on top of every OTHER active filter (the option's
+  // own facet is excluded so you can still switch within it). An option that
+  // would leave zero cards is disabled, so a filter can never empty the table.
+  const facet = useMemo(() => {
+    const picked = cards.filter((card) => selectedIds.has(card.id));
+    const byNetwork = (card: Card) =>
+      selectedNetworks.length === 0 || selectedNetworks.includes(card.network);
+    const byReward = (card: Card) =>
+      selectedRewardType === "ALL" || card.rewardType === selectedRewardType;
+    const byNoFx = (card: Card) => !requireNoFxFee || !card.fxPolicy.hasFxFee;
+    const byLounge = (card: Card) => !requireLoungeAccess || Boolean(card.lounges?.length);
+
+    const networkCounts = new Map<Network, number>();
+    for (const network of networks) {
+      networkCounts.set(
+        network,
+        picked.filter(
+          (card) => card.network === network && byReward(card) && byNoFx(card) && byLounge(card),
+        ).length,
+      );
+    }
+
+    const rewardCounts = {} as Record<RewardType | "ALL", number>;
+    for (const option of REWARD_OPTIONS) {
+      rewardCounts[option.value] = picked.filter(
+        (card) =>
+          (option.value === "ALL" || card.rewardType === option.value) &&
+          byNetwork(card) &&
+          byNoFx(card) &&
+          byLounge(card),
+      ).length;
+    }
+
+    const noFxCount = picked.filter(
+      (card) => !card.fxPolicy.hasFxFee && byNetwork(card) && byReward(card) && byLounge(card),
+    ).length;
+    const loungeCount = picked.filter(
+      (card) => Boolean(card.lounges?.length) && byNetwork(card) && byReward(card) && byNoFx(card),
+    ).length;
+
+    return { networkCounts, rewardCounts, noFxCount, loungeCount };
+  }, [
+    cards,
+    networks,
+    selectedIds,
+    selectedNetworks,
+    selectedRewardType,
+    requireNoFxFee,
+    requireLoungeAccess,
+  ]);
+
+  // The applied filters, as removable summary tags (the picker is excluded — it
+  // has its own "Clear").
+  const activeFilters: ActiveFilter[] = [
+    ...selectedNetworks.map((network) => ({
+      key: `network-${network}`,
+      label: network,
+      onRemove: () => toggleNetwork(network, false),
+    })),
+    ...(selectedRewardType !== "ALL"
+      ? [
+          {
+            key: "reward",
+            label:
+              REWARD_OPTIONS.find((option) => option.value === selectedRewardType)?.label ??
+              "Reward",
+            onRemove: () => dispatch({ type: "setRewardType", value: "ALL" }),
+          },
+        ]
+      : []),
+    ...(requireNoFxFee
+      ? [
+          {
+            key: "no-fx",
+            label: "No FX fee",
+            onRemove: () => dispatch({ type: "setNoFxFee", value: false }),
+          },
+        ]
+      : []),
+    ...(requireLoungeAccess
+      ? [
+          {
+            key: "lounge",
+            label: "Lounge access",
+            onRemove: () => dispatch({ type: "setLoungeAccess", value: false }),
+          },
+        ]
+      : []),
+  ];
 
   // Best/worst is only meaningful when comparing two or more cards.
   const rowWinners = useMemo(
@@ -53,133 +162,50 @@ const ComparisonMatrix = ({ cards }: ComparisonMatrixProps) => {
 
   return (
     <>
-      <section className={styles.filters} aria-label="Filter cards">
-        <fieldset className={styles.fieldset}>
-          <legend>Network</legend>
-          <div className={styles.multiSelectRow}>
-            {networks.map((network) => (
-              <label key={network} className={styles.filterLabel}>
-                <input
-                  type="checkbox"
-                  checked={selectedNetworks.includes(network)}
-                  onChange={(event) =>
-                    setSelectedNetworks((current) =>
-                      event.target.checked
-                        ? [...current, network]
-                        : current.filter((item) => item !== network),
-                    )
-                  }
-                />
-                {network}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
-        <label className={styles.filterLabel}>
-          Reward type
-          <select
-            value={selectedRewardType}
-            onChange={(event) => setSelectedRewardType(event.target.value as RewardType | "ALL")}
-          >
-            <option value="ALL">All</option>
-            <option value="MR">Membership Rewards</option>
-            <option value="CASHBACK">Cashback</option>
-            <option value="POINTS">Points</option>
-          </select>
-        </label>
-
-        <label className={styles.filterLabel}>
-          <input
-            type="checkbox"
-            checked={requireNoFxFee}
-            onChange={(event) => setRequireNoFxFee(event.target.checked)}
-          />
-          No FX fee
-        </label>
-
-        <label className={styles.filterLabel}>
-          <input
-            type="checkbox"
-            checked={requireLoungeAccess}
-            onChange={(event) => setRequireLoungeAccess(event.target.checked)}
-          />
-          Lounge access
-        </label>
+      <section className={styles.controls} aria-label="Choose and filter cards">
+        <CardPicker
+          cards={cards}
+          selectedIds={selectedIds}
+          onToggle={(id) => dispatch({ type: "toggleCard", id })}
+          onSelectAll={() =>
+            dispatch({ type: "selectAllCards", ids: cards.map((card) => card.id) })
+          }
+          onClear={() => dispatch({ type: "clearCards" })}
+        />
+        <FilterBar
+          networks={networks}
+          networkCounts={facet.networkCounts}
+          selectedNetworks={selectedNetworks}
+          onToggleNetwork={toggleNetwork}
+          rewardOptions={REWARD_OPTIONS}
+          rewardCounts={facet.rewardCounts}
+          selectedRewardType={selectedRewardType}
+          onRewardChange={(value) => dispatch({ type: "setRewardType", value })}
+          noFxCount={facet.noFxCount}
+          requireNoFxFee={requireNoFxFee}
+          onNoFxChange={(value) => dispatch({ type: "setNoFxFee", value })}
+          loungeCount={facet.loungeCount}
+          requireLoungeAccess={requireLoungeAccess}
+          onLoungeChange={(value) => dispatch({ type: "setLoungeAccess", value })}
+        />
       </section>
 
-      <p className={styles.resultCount}>
-        Showing {filteredCards.length} of {cards.length} cards
-      </p>
+      {selectedIds.size > 0 && (
+        <p className={styles.resultCount}>
+          Showing {filteredCards.length} of {selectedIds.size} selected
+        </p>
+      )}
+
+      <ActiveFilters filters={activeFilters} onReset={() => dispatch({ type: "resetFilters" })} />
 
       {filteredCards.length > 0 ? (
-        <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th className={styles.cornerCell}>
-                  <span className={styles.srOnly}>Attribute</span>
-                </th>
-                {filteredCards.map((card) => (
-                  <th key={card.id} scope="col" className={styles.cardHead}>
-                    <Link
-                      href={`/${card.id}`}
-                      className={styles.cardLink}
-                      aria-label={`View details for ${card.displayName}`}
-                    >
-                      <span className={styles.cardName}>
-                        {card.shortName ?? card.displayName}
-                      </span>
-                      <span className={styles.cardIssuer}>{card.issuer}</span>
-                      <span className={styles.cardDetails}>Details →</span>
-                    </Link>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {COMPARISON_ROWS.map((row, rowIdx) => (
-                <tr
-                  key={row.label}
-                  className={row.numericValue ? styles.rowHighlight : undefined}
-                >
-                  <th scope="row" className={styles.rowLabel}>
-                    {row.label}
-                  </th>
-                  {filteredCards.map((card) => {
-                    const cell = row.value(card);
-                    const isWinner = rowWinners[rowIdx]?.has(card.id) ?? false;
-                    const isWorst = rowWorst[rowIdx]?.has(card.id) ?? false;
-                    const statusClass = isWinner
-                      ? styles.cellBest
-                      : isWorst
-                        ? styles.cellWorst
-                        : "";
-                    return (
-                      <td key={card.id} className={`${styles.cell} ${statusClass}`}>
-                        {cell.emphasizePrimary ? (
-                          <span className={styles.primaryValue}>{cell.primary}</span>
-                        ) : (
-                          cell.primary
-                        )}
-                        {cell.detail && <span className={styles.subValue}>{cell.detail}</span>}
-                        {cell.capped && (
-                          <span className={styles.capped} title="Accelerated rate is capped at an annual spend limit">
-                            capped
-                          </span>
-                        )}
-                        {isWinner && <span className={styles.srOnly}> (best in row)</span>}
-                        {isWorst && <span className={styles.srOnly}> (weakest in row)</span>}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <MatrixTable cards={filteredCards} rowWinners={rowWinners} rowWorst={rowWorst} />
       ) : (
-        <p className={styles.emptyState}>No cards match the selected filters.</p>
+        <p className={styles.emptyState}>
+          {noneSelected
+            ? "Pick at least one card above to start comparing."
+            : "No selected cards match the current filters."}
+        </p>
       )}
 
       <p className={styles.footnote}>

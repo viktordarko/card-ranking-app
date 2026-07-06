@@ -8,11 +8,11 @@
     font-size: 1.6rem;
     font-weight: 700;
     margin: 0 0 0.4rem;
-    color: #0f172a;
+    color: var(--text);
 }
 
 .subheading {
-    color: #475569;
+    color: var(--text-secondary);
     margin: 0 0 1.5rem;
     font-size: 0.938rem;
     max-width: 760px;

@@ -1,0 +1,50 @@
+.filterBar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.75rem;
+    align-items: flex-start;
+    padding: 0.8rem 1rem;
+    border-top: 1px solid var(--border);
+    background: var(--surface-alt);
+}
+
+.filterGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    /* reset <fieldset> UA defaults (Network / Perks groups are fieldsets) */
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+}
+
+.filterGroupLabel {
+    /* also used as a <legend>; keep it a normal flex item */
+    float: none;
+    padding: 0;
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+}
+
+.pillRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    min-height: 1.9rem;
+    align-items: center;
+}
+
+.select {
+    padding: 0.32rem 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    min-height: 1.9rem;
+    cursor: pointer;
+}

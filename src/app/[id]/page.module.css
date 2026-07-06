@@ -12,7 +12,7 @@
 
 .backLink {
     font-size: 0.875rem;
-    color: #2563eb;
+    color: var(--link);
     font-weight: 500;
 }
 
@@ -26,8 +26,8 @@
     display: flex;
     flex-wrap: wrap;
     gap: 1.5rem;
-    background: #ffffff;
-    border: 1px solid #dbe2ea;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
     border-radius: 12px;
     padding: 1.5rem;
     margin-bottom: 1.25rem;
@@ -49,13 +49,13 @@
     font-size: 1.4rem;
     font-weight: 700;
     margin: 0 0 0.3rem;
-    color: #0f172a;
+    color: var(--text);
     line-height: 1.3;
 }
 
 .issuer {
     font-size: 0.875rem;
-    color: #64748b;
+    color: var(--text-muted);
     margin: 0 0 0.85rem;
 }
 
@@ -75,28 +75,28 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    background: #e2e8f0;
-    color: #334155;
+    background: var(--chip-neutral-bg);
+    color: var(--chip-neutral-text);
 }
 
 .netAMEX {
-    background: #dbeafe;
-    color: #1e40af;
+    background: var(--chip-blue-bg);
+    color: var(--chip-blue-text);
 }
 
 .netVISA {
-    background: #1e3a8a;
-    color: #ffffff;
+    background: var(--primary);
+    color: var(--on-primary);
 }
 
 .netMASTERCARD {
-    background: #fee2e2;
-    color: #991b1b;
+    background: var(--worst-bg);
+    color: var(--worst-text);
 }
 
 .badgeGreen {
-    background: #d1fae5;
-    color: #065f46;
+    background: var(--chip-green-bg);
+    color: var(--chip-green-text);
 }
 
 /* ── Fee stats ── */
@@ -105,8 +105,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
     border-radius: 10px;
     padding: 0.8rem 1.1rem;
     min-width: 110px;
@@ -114,7 +114,7 @@
 
 .feeLabel {
     font-size: 0.68rem;
-    color: #64748b;
+    color: var(--text-muted);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -124,22 +124,22 @@
 .feeValue {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--text);
 }
 
 .fxBad {
-    color: #dc2626;
+    color: var(--danger);
 }
 
 .fxGood {
-    color: #059669;
+    color: var(--success);
 }
 
 /* ── Sections ── */
 
 .section {
-    background: #ffffff;
-    border: 1px solid #dbe2ea;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
     border-radius: 10px;
     padding: 1.25rem 1.5rem;
     margin-bottom: 1rem;
@@ -148,10 +148,10 @@
 .sectionTitle {
     font-size: 0.95rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--text);
     margin: 0 0 0.9rem;
     padding-bottom: 0.5rem;
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid var(--border);
 }
 
 /* ── Metadata grid ── */
@@ -166,7 +166,7 @@
 .metaItem {
     display: flex;
     flex-direction: column;
-    background: #f1f5f9;
+    background: var(--surface-subtle);
     border-radius: 8px;
     padding: 0.6rem 1rem;
     min-width: 180px;
@@ -177,14 +177,14 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: #64748b;
+    color: var(--text-muted);
     margin-bottom: 0.2rem;
 }
 
 .metaValue {
     font-size: 0.875rem;
     font-weight: 500;
-    color: #0f172a;
+    color: var(--text);
 }
 
 /* ── Earn rates table ── */
@@ -202,20 +202,20 @@
 .earnTable th {
     text-align: left;
     padding: 0.5rem 0.75rem;
-    background: #f1f5f9;
-    color: #475569;
+    background: var(--surface-subtle);
+    color: var(--text-secondary);
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    border-bottom: 1px solid #dbe2ea;
+    border-bottom: 1px solid var(--border-strong);
 }
 
 .earnTable td {
     padding: 0.7rem 0.75rem;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--border);
     vertical-align: middle;
-    color: #0f172a;
+    color: var(--text);
 }
 
 .earnTable tbody tr:last-child td {
@@ -228,8 +228,8 @@
 
 .rateNum {
     display: inline-block;
-    background: #1e3a8a;
-    color: #ffffff;
+    background: var(--primary);
+    color: var(--on-primary);
     font-weight: 700;
     font-size: 0.95rem;
     padding: 0.2rem 0.6rem;
@@ -241,12 +241,12 @@
 .scopeChip {
     display: inline-block;
     font-size: 0.7rem;
-    background: #f1f5f9;
-    color: #475569;
+    background: var(--surface-subtle);
+    color: var(--text-secondary);
     padding: 0.15rem 0.55rem;
     border-radius: 4px;
     white-space: nowrap;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border);
 }
 
 /* ── Two-column layout ── */
@@ -288,24 +288,24 @@
     position: absolute;
     left: 0;
     top: 0;
-    color: #059669;
+    color: var(--success);
     font-weight: 700;
 }
 
 .benefitText {
     font-size: 0.875rem;
-    color: #0f172a;
+    color: var(--text);
     line-height: 1.4;
 }
 
 .visitBadge {
     font-size: 0.75rem;
-    color: #475569;
+    color: var(--text-secondary);
 }
 
 .emptyNote {
     font-size: 0.875rem;
-    color: #94a3b8;
+    color: var(--text-faint);
     margin: 0;
 }
 
@@ -323,10 +323,10 @@
 .capList li {
     font-size: 0.875rem;
     padding: 0.55rem 0.75rem;
-    background: #fffbeb;
-    border-left: 3px solid #f59e0b;
+    background: var(--warn-bg);
+    border-left: 3px solid var(--warn-border);
     border-radius: 0 4px 4px 0;
-    color: #78350f;
+    color: var(--warn-text);
     line-height: 1.45;
 }
 
@@ -334,9 +334,9 @@
 
 .noteSection {
     font-size: 0.8rem;
-    color: #64748b;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    color: var(--text-muted);
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 0.75rem 1rem;
     line-height: 1.65;
@@ -345,17 +345,17 @@
 
 .noteLabel {
     font-weight: 700;
-    color: #475569;
+    color: var(--text-secondary);
 }
 
 .sourceLine {
     margin-top: 1.25rem;
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--text-faint);
 }
 
 .sourceLink {
-    color: #2563eb;
+    color: var(--link);
     text-decoration: underline;
     word-break: break-word;
 }

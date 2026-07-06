@@ -1,0 +1,162 @@
+.tableWrap {
+    overflow-x: auto;
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    box-shadow: var(--shadow-table);
+}
+
+.table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 980px;
+    font-size: 0.85rem;
+}
+
+/* ── Header row ── */
+
+.table thead {
+    background: var(--primary);
+    color: var(--on-primary);
+}
+
+.cornerCell {
+    padding: 0.75rem 1rem;
+    min-width: 130px;
+}
+
+.cardHead {
+    padding: 0.7rem 0.75rem;
+    text-align: center;
+    font-weight: 600;
+    min-width: 120px;
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+    vertical-align: top;
+}
+
+.cardLink {
+    display: block;
+    color: var(--on-primary);
+}
+
+.cardName {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: rgba(255, 255, 255, 0.45);
+    line-height: 1.35;
+}
+
+.cardLink:hover .cardName {
+    text-decoration-color: #ffffff;
+}
+
+.cardDetails {
+    display: inline-block;
+    margin-top: 0.4rem;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #93c5fd;
+    white-space: nowrap;
+}
+
+.cardLink:hover .cardDetails {
+    color: #ffffff;
+}
+
+.cardIssuer {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 0.25rem;
+}
+
+/* ── Row label (first column) ── */
+
+.rowLabel {
+    padding: 0.55rem 1rem;
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-align: left;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    background: var(--surface-subtle);
+    border-right: 1px solid var(--border-strong);
+    border-top: 1px solid var(--border);
+    position: sticky;
+    left: 0;
+    z-index: 1;
+}
+
+/* ── Data cells ── */
+
+.cell {
+    padding: 0.55rem 0.6rem;
+    text-align: center;
+    border-left: 1px solid var(--border);
+    border-top: 1px solid var(--border);
+    color: var(--text);
+    background: var(--surface);
+}
+
+.primaryValue {
+    display: block;
+    font-weight: 600;
+}
+
+.subValue {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.capped {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 0.58rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--capped-text);
+}
+
+/* Alternating rows */
+.table tbody tr:nth-child(even) .cell {
+    background: var(--surface-alt);
+}
+
+.table tbody tr:nth-child(even) .rowLabel {
+    background: var(--surface-subtle-alt);
+}
+
+/* Hover */
+.table tbody tr:hover .cell {
+    background: var(--row-hover);
+}
+
+.table tbody tr:hover .rowLabel {
+    background: var(--rowlabel-hover);
+}
+
+/* Best-in-row winner cell */
+.cellBest {
+    background: var(--best-bg) !important;
+    color: var(--best-text) !important;
+    font-weight: 700;
+}
+
+.cellWorst {
+    background: var(--worst-bg) !important;
+    color: var(--worst-text) !important;
+    font-weight: 700;
+}
+
+/* Highlight rows (key comparison points) */
+.rowHighlight .rowLabel {
+    color: var(--primary-accent);
+}
