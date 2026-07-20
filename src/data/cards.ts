@@ -239,14 +239,6 @@ export const CARDS: Card[] = [
     },
     earnRates: [
       {
-        id: "triangle-ct-stores",
-        rewardType: "CASHBACK",
-        rateMultiplier: 4,
-        description: "4% CT Money at Canadian Tire family stores",
-        mccTags: ["ct-stores"],
-        locationScope: "CA_ONLY",
-      },
-      {
         id: "triangle-grocery",
         rewardType: "CASHBACK",
         rateMultiplier: 1.5,
@@ -270,6 +262,14 @@ export const CARDS: Card[] = [
       "Personalized offers and bonus CT Money events through Triangle Rewards",
     ],
     specificBrands: [
+      {
+        id: "Canadian Tire stores",
+        rewardType: "CASHBACK",
+        rateMultiplier: 4,
+        description: "4% CT Money at Canadian Tire family stores",
+        mccTags: ["ct-stores"],
+        locationScope: "CA_ONLY",
+      },
       {
         id: "Petro-Canada",
         rewardType: "CASHBACK",

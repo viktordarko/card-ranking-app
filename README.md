@@ -24,13 +24,21 @@ currencies can be judged apples-to-apples.
   access; each filter shows a live count and disables itself when it would leave no
   cards, so you can't filter the table down to nothing. Applied filters are shown as
   removable tags with a one-click reset. The best value in each numeric row is
-  highlighted green and the worst red — recomputed over whatever set is on screen,
-  with ties sharing the highlight.
+  highlighted green and the worst red — recomputed over whatever set is on screen.
+  Ties on estimated earn value are broken by redemption flexibility (the easier-to-use
+  reward wins the highlight); only cards tied on both share it.
 - **Normalized rewards** — a 2x Membership Rewards rate, a 5x points rate, and a 3%
   cashback rate are converted to a comparable estimated percentage value, so
   rankings are fair across reward currencies.
 - **Fallback-aware cells** — accelerated rates are shown together with what they
   fall back to (e.g. "5x … falls back to 1x on non-bonus spend").
+- **Categories, explained where you need them** — every category row label links
+  to its definition in the "What counts in each category?" reference below the
+  table: what typically counts, plus its most common merchant-coding gotcha
+  (e.g. Walmart and Costco usually don't code as groceries). Clicking a label
+  opens the reference and highlights that entry; a hover tooltip carries the
+  same definition as a mouse shortcut. Rows and reference render from one typed
+  category registry, so the table and its definitions can't drift.
 - **Per-card detail pages** (`/[id]`) — earn-rate breakdown, lounge access, key
   benefits, spending caps, brand-specific boosts, notes, the reward valuation, and a
   link to the official issuer page each card was fact-checked against. Each page is
@@ -112,7 +120,7 @@ pnpm start
 src/
 ├── app/         # App Router routes, layout, and route-scoped CSS Modules
 ├── components/  # Client UI island (ComparisonMatrix orchestrator + focused pieces)
-├── data/        # Card portfolio + reward-value profiles (source of truth)
+├── data/        # Card portfolio, reward-value profiles, category registry
 ├── lib/         # Pure logic: valuation, comparison, formatting
 └── types/       # Shared domain model (Card, EarnRate, RewardValueProfile, …)
 ```
@@ -132,10 +140,14 @@ estimatedValuePercent = earnRate.rateMultiplier × rewardValueProfile.value
 Every earn rate is normalized through its card's reward-value profile (e.g.
 Membership Rewards at 2.0¢/pt, cash back at 1.0¢). The comparison ranks on this
 normalized value while still **displaying** each card's native rate (`x` for
-points, `%` for cash back). Crucially, **how easily** a reward redeems is tracked
-_separately_ (a `redemption` flexibility score, shown as its own row and used as a
-tiebreaker) — so store-locked Canadian Tire Money isn't confused with universal
-cash back even though both are worth 1¢. Full details in
+points, `%` for cash back). One deliberate stance — the **transfer floor**: a
+transferable currency is never valued below its best 1:1 transfer partner, which
+is why Membership Rewards (1:1 to Aeroplan, plus other partners) and Aeroplan
+are both valued at 2.0¢. Crucially, **how easily** a reward redeems is tracked
+_separately_ (a `redemption` flexibility score, shown as its own row and used to
+break ties when two cards earn the same estimated value) — so store-locked
+Canadian Tire Money isn't confused with universal cash back even though both are
+worth 1¢. Full details in
 [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## Adding or updating cards

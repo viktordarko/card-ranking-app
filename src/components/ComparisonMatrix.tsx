@@ -210,11 +210,11 @@ const ComparisonMatrix = ({ cards }: ComparisonMatrixProps) => {
 
       <p className={styles.footnote}>
         Cells show each card&apos;s actual earn rate (&times; for points, % for cash back). Green
-        marks the best value in each numeric row and red the weakest; ties share the highlight, and
-        for fees lower is better. Ranking is by estimated cash value — Amex MR and Aeroplan at
-        2&cent;/point, Scene+ at 1&cent;, cash back at 1&cent; (Rogers 1.5&cent; when redeemed
-        toward Rogers/Fido/Shaw bills). The Redemption row rates how flexibly each reward can be
-        used — a tiebreaker that is separate from how much it is worth.
+        marks the best value in each numeric row and red the weakest; for fees, lower is better.
+        Ranking is by estimated cash value — Amex MR and Aeroplan at 2&cent;/point, Scene+ at
+        1&cent;, cash back at 1&cent; (Rogers 1.5&cent; when redeemed toward Rogers/Fido/Shaw
+        bills). The Redemption row rates how flexibly each reward can be used — separate from how
+        much it is worth, and the tiebreaker when two cards earn the same estimated value.
       </p>
     </>
   );

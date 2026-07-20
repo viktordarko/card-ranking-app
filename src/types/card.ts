@@ -1,3 +1,4 @@
+import type { CategoryId } from "./category";
 import type { RewardValueProfileId } from "./rewardValue";
 
 export type Network = "AMEX" | "VISA" | "MASTERCARD";
@@ -15,7 +16,8 @@ export interface EarnRate {
   rateMultiplier: number;
   description: string;
   appliesTo?: string;
-  mccTags: string[];
+  /** Categories the rate targets — see `SPENDING_CATEGORIES` for definitions. */
+  mccTags: CategoryId[];
   locationScope: LocationScope;
   /** True when this accelerated rate reverts to the base rate past an annual
    * spend cap (the exact threshold lives in the card's `caps`). */

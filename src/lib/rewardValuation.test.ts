@@ -41,8 +41,6 @@ describe("getCardValueUnit", () => {
   });
 
   it("keeps store-locked CT Money at full 1:1 value (its downside is redemption, not value)", () => {
-    // Regression guard for the CT Money decision: it must not be devalued below
-    // universal cash back on the earn axis.
     expect(getCardValueUnit(cardById("triangle-mastercard"))).toBe(
       getCardValueUnit(cardById("cibc-dividend-vi")),
     );

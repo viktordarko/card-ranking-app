@@ -1,3 +1,4 @@
+import CategoryLegend from "../components/CategoryLegend";
 import ComparisonMatrix from "../components/ComparisonMatrix";
 import { CARDS } from "../data/cards";
 import styles from "./page.module.css";
@@ -13,6 +14,7 @@ const HomePage = () => {
       </p>
 
       <ComparisonMatrix cards={CARDS} />
+      <CategoryLegend />
     </main>
   );
 };

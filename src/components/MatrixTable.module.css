@@ -91,6 +91,21 @@
     z-index: 1;
 }
 
+/* Category labels link to their definition in the legend below the table
+   (plus a hover tooltip); the dotted underline is the cue. */
+.rowLabelHint {
+    color: inherit;
+    text-decoration: underline dotted;
+    text-decoration-color: var(--text-muted);
+    text-underline-offset: 3px;
+    cursor: help;
+}
+
+.rowLabelHint:hover {
+    color: var(--primary-accent);
+    text-decoration-color: var(--primary-accent);
+}
+
 /* ── Data cells ── */
 
 .cell {

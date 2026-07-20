@@ -1,5 +1,8 @@
+import { SPENDING_CATEGORIES } from "../data/categories";
 import type { Card, EarnRate } from "../types/card";
+import type { CategoryId } from "../types/category";
 import {
+  formatCategoryTooltip,
   formatLoungeVisits,
   formatRewardRate,
   formatSpecificBrandRate,
@@ -19,9 +22,17 @@ export interface ComparisonCell {
 
 export interface ComparisonRowDef {
   label: string;
+  /** Set on earn rows: links the row label to this category's legend entry. */
+  categoryId?: CategoryId;
+  /** Hover explanation of the row (what counts, common miscoding gotcha). */
+  tooltip?: string;
   value: (card: Card) => ComparisonCell;
   numericValue?: (card: Card) => number;
   lowerIsBetter?: boolean;
+  /** Breaks `numericValue` ties (higher wins). Earn rows use redemption
+   * flexibility: between two cards returning the same estimated value, the one
+   * whose rewards are easier to use is genuinely better. */
+  tiebreak?: (card: Card) => number;
 }
 
 const toCell = (
@@ -36,7 +47,7 @@ const toCell = (
   };
 };
 
-const getNumericRate = (card: Card, tag: string): number => {
+const getNumericRate = (card: Card, tag: CategoryId): number => {
   const categoryRates = card.earnRates.filter((rate) =>
     rate.mccTags.includes(tag),
   );
@@ -52,6 +63,10 @@ const getNumericRate = (card: Card, tag: string): number => {
 
 const getNumericBase = (card: Card): number => {
   return toEstimatedBaseValuePercent(card);
+};
+
+const getRedemptionFlexibility = (card: Card): number => {
+  return card.redemption?.flexibility ?? 0;
 };
 
 const getDisplayedRateMultiplier = (
@@ -78,13 +93,13 @@ const getDisplayedBaseRate = (card: Card): number => {
   return getDisplayedRateMultiplier(card, rawBase);
 };
 
-const getSortedCategoryRates = (card: Card, tag: string): EarnRate[] => {
+const getSortedCategoryRates = (card: Card, tag: CategoryId): EarnRate[] => {
   return card.earnRates
     .filter((rate) => rate.mccTags.includes(tag))
     .toSorted((a, b) => b.rateMultiplier - a.rateMultiplier);
 };
 
-const getCategoryCell = (card: Card, tag: string): ComparisonCell => {
+const getCategoryCell = (card: Card, tag: CategoryId): ComparisonCell => {
   const categoryRates = getSortedCategoryRates(card, tag);
   const bestCategoryRate = categoryRates[0];
   const bestBaseRate = getDisplayedBaseRate(card);
@@ -171,6 +186,25 @@ const getSpecificBrandsLabel = (card: Card): string => {
     .join("; ");
 };
 
+/**
+ * One matrix row per bonus category, in registry order — so adding a category
+ * to `SPENDING_CATEGORIES` adds its row (and hover definition) automatically.
+ */
+const CATEGORY_ROWS: ComparisonRowDef[] = SPENDING_CATEGORIES.filter(
+  (category) => category.kind === "bonus",
+).map((category) => ({
+  label: category.label,
+  categoryId: category.id,
+  tooltip: formatCategoryTooltip(category),
+  value: (card: Card) => getCategoryCell(card, category.id),
+  numericValue: (card: Card) => getNumericRate(card, category.id),
+  tiebreak: getRedemptionFlexibility,
+}));
+
+const BASE_CATEGORY = SPENDING_CATEGORIES.find(
+  (category) => category.kind === "base",
+);
+
 export const COMPARISON_ROWS: ComparisonRowDef[] = [
   {
     label: "Network",
@@ -210,46 +244,15 @@ export const COMPARISON_ROWS: ComparisonRowDef[] = [
       card.fxPolicy.hasFxFee ? (card.fxPolicy.fxFeePercent ?? 2.5) : 0,
     lowerIsBetter: true,
   },
-  {
-    label: "USD spend",
-    value: (card) => getCategoryCell(card, "usd-spend"),
-    numericValue: (card) => getNumericRate(card, "usd-spend"),
-  },
-  {
-    label: "Dining",
-    value: (card) => getCategoryCell(card, "restaurant"),
-    numericValue: (card) => getNumericRate(card, "restaurant"),
-  },
-  {
-    label: "Groceries",
-    value: (card) => getCategoryCell(card, "groceries"),
-    numericValue: (card) => getNumericRate(card, "groceries"),
-  },
-  {
-    label: "Gas",
-    value: (card) => getCategoryCell(card, "gas"),
-    numericValue: (card) => getNumericRate(card, "gas"),
-  },
-  {
-    label: "Travel",
-    value: (card) => getCategoryCell(card, "travel"),
-    numericValue: (card) => getNumericRate(card, "travel"),
-  },
-  {
-    label: "Transit",
-    value: (card) => getCategoryCell(card, "transit"),
-    numericValue: (card) => getNumericRate(card, "transit"),
-  },
-  {
-    label: "Entertainment",
-    value: (card) => getCategoryCell(card, "entertainment"),
-    numericValue: (card) => getNumericRate(card, "entertainment"),
-  },
+  ...CATEGORY_ROWS,
   {
     label: "Base earn",
+    categoryId: BASE_CATEGORY?.id,
+    tooltip: BASE_CATEGORY && formatCategoryTooltip(BASE_CATEGORY),
     value: (card) =>
       toCell(formatRewardRate(card.rewardType, getDisplayedBaseRate(card))),
     numericValue: (card) => getNumericBase(card),
+    tiebreak: getRedemptionFlexibility,
   },
   {
     label: "Lounge",
@@ -277,7 +280,7 @@ const computeRowExtremes = (
     }
 
     const values = cards.map((card) => ({
-      id: card.id,
+      card,
       value: row.numericValue?.(card) ?? 0,
     }));
 
@@ -289,11 +292,18 @@ const computeRowExtremes = (
       : row.lowerIsBetter ? Math.max(...values.map((entry) => entry.value))
       : Math.min(...values.map((entry) => entry.value));
 
-    return new Set(
-      values
-        .filter((entry) => entry.value === extreme)
-        .map((entry) => entry.id),
-    );
+    let tied = values.filter((entry) => entry.value === extreme);
+
+    // Same estimated value ≠ same card: when the row has a tiebreak, keep only
+    // the genuinely best (or, for "worst", most limited) of the tied cards.
+    if (row.tiebreak && tied.length > 1) {
+      const scores = tied.map((entry) => row.tiebreak?.(entry.card) ?? 0);
+      const target =
+        mode === "best" ? Math.max(...scores) : Math.min(...scores);
+      tied = tied.filter((_, index) => scores[index] === target);
+    }
+
+    return new Set(tied.map((entry) => entry.card.id));
   });
 };
 

@@ -1,4 +1,5 @@
 import type { LocationScope, RewardType } from "../types/card";
+import type { SpendingCategory } from "../types/category";
 
 export const getRewardSuffix = (rewardType: RewardType): string => {
   return rewardType === "CASHBACK" ? "%" : "x";
@@ -41,6 +42,20 @@ export const formatLoungeVisits = (
   }
 
   return `${freeVisitsPerYear}/yr`;
+};
+
+export const formatCategoryTooltip = (category: SpendingCategory): string => {
+  const parts = [category.description];
+
+  if (category.includes?.length) {
+    parts.push(`Typically: ${category.includes.join(", ")}.`);
+  }
+
+  if (category.watchOut) {
+    parts.push(`Watch out: ${category.watchOut}`);
+  }
+
+  return parts.join(" ");
 };
 
 export const formatScopeLabel = (scope: LocationScope): string => {

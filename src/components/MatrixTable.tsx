@@ -39,7 +39,24 @@ const MatrixTable = ({ cards, rowWinners, rowWorst }: MatrixTableProps) => {
           {COMPARISON_ROWS.map((row, rowIdx) => (
             <tr key={row.label} className={row.numericValue ? styles.rowHighlight : undefined}>
               <th scope="row" className={styles.rowLabel}>
-                {row.label}
+                {row.categoryId ? (
+                  <a
+                    href={`#category-${row.categoryId}`}
+                    className={styles.rowLabelHint}
+                    title={row.tooltip}
+                    onClick={() => {
+                      // The target lives inside the collapsed legend; not every
+                      // browser auto-opens a <details> on fragment navigation.
+                      document
+                        .querySelector<HTMLDetailsElement>("#category-legend")
+                        ?.setAttribute("open", "");
+                    }}
+                  >
+                    {row.label}
+                  </a>
+                ) : (
+                  row.label
+                )}
               </th>
               {cards.map((card) => {
                 const cell = row.value(card);
