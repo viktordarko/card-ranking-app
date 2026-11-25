@@ -1,0 +1,140 @@
+/* ── Toolbar: view switch + sort ── */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.viewToggle {
+  position: relative; /* contains the visually hidden legend */
+  display: inline-flex;
+  min-width: 0;
+  margin: 0;
+  padding: 0.25rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface-subtle);
+}
+
+.viewButton {
+  padding: 0.5rem 1rem;
+  border: 2px solid transparent;
+  border-radius: 9px;
+  background: none;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.viewButton:hover {
+  color: var(--text);
+}
+
+.viewButton[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--primary-accent);
+  border-color: var(--primary-accent);
+}
+
+.sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1rem;
+  margin-left: auto;
+}
+
+.option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.3rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.option input {
+  accent-color: var(--primary-accent);
+}
+
+.sort select {
+  min-height: 2.3rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.viewButton:focus-visible,
+.resultCount:focus-visible,
+.sort select:focus-visible {
+  outline: 2px solid var(--primary-accent);
+  outline-offset: 2px;
+}
+
+/* ── Controls shell (wraps CardPicker + FilterBar as one card) ── */
+
+.controls {
+  margin: 0 0 1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.controls > :first-child {
+  border-top: 0;
+}
+
+.resultCount {
+  width: fit-content;
+  margin: 0 0 0.75rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/* ── Browse view ── */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
+  gap: 1.1rem;
+}
+
+/* ── Empty state ── */
+
+.emptyState {
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  text-align: center;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px dashed var(--border-dashed);
+  border-radius: 14px;
+}
+
+/* ── Footnote ── */
+
+.footnote {
+  margin-top: 1.25rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+}

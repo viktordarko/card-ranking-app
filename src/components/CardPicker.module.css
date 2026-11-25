@@ -34,6 +34,8 @@
 }
 
 .cardChip {
+    position: relative; /* contains the visually hidden checkbox */
+    flex-shrink: 0;
     display: inline-flex;
     align-items: center;
     padding: 0.32rem 0.75rem;
@@ -84,4 +86,13 @@
 .linkButton:disabled {
     color: var(--text-faint);
     cursor: default;
+}
+
+@media (max-width: 600px) {
+    .cardPickerRow {
+        flex-wrap: nowrap;
+        margin: 0 -1rem;
+        padding: 0.3rem 1rem;
+        overflow-x: auto;
+    }
 }

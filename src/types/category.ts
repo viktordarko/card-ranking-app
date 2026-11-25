@@ -1,3 +1,5 @@
+import type { Network } from "./card";
+
 /**
  * The merchant categories an earn rate can target. A closed union (rather than
  * free-form strings) so a typo'd tag in card data is a compile error, not a
@@ -7,6 +9,7 @@ export type CategoryId =
   | "usd-spend"
   | "restaurant"
   | "groceries"
+  | "costco"
   | "gas"
   | "travel"
   | "transit"
@@ -31,6 +34,8 @@ export interface SpendingCategory {
   description: string;
   /** Example merchants/purchases that make the description concrete. */
   includes?: string[];
+  /** Networks taken there, when not all are. Other cards earn nothing. */
+  acceptedNetworks?: Network[];
   /** The single most common way this category surprises people. At most one
    * caveat, deliberately — cap amounts and reset rules are card facts, not
    * category facts, and live in each card's `caps`. */

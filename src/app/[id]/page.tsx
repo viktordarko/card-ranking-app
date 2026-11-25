@@ -1,13 +1,31 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import CardArt from "../../components/CardArt";
+import CategoryIcon from "../../components/CategoryIcon";
+import ExplorerLink from "../../components/ExplorerLink";
+import WelcomeOfferPanel from "../../components/WelcomeOfferPanel";
 import { CARDS } from "../../data/cards";
 import {
+  formatAnnualFee,
+  formatDate,
+  formatExtraCardFee,
+  formatIncome,
+  formatLoungeVisits,
+  formatNetwork,
+  formatPercent,
   formatRewardRate,
+  formatRewardType,
   formatScopeLabel,
   formatSpecificBrandRate,
+  INSURANCE_LABELS,
 } from "../../lib/cardFormatting";
-import { getCardValueUnit } from "../../lib/rewardValuation";
+import { getBestForCategories } from "../../lib/cardHighlights";
+import {
+  getCardValueNotes,
+  getCardValueUnit,
+  getFxFeePercent,
+  toEstimatedValuePercent,
+} from "../../lib/rewardValuation";
 import styles from "./page.module.css";
 
 export const generateStaticParams = () => {
@@ -16,11 +34,7 @@ export const generateStaticParams = () => {
 
 export const dynamicParams = false;
 
-export const generateMetadata = async ({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}): Promise<Metadata> => {
+export const generateMetadata = async ({ params }: PageProps<"/[id]">): Promise<Metadata> => {
   const { id } = await params;
   const card = CARDS.find((item) => item.id === id);
 
@@ -34,11 +48,7 @@ export const generateMetadata = async ({
   };
 };
 
-const CardDetailPage = async ({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) => {
+const CardDetailPage = async ({ params }: PageProps<"/[id]">) => {
   const { id } = await params;
   const card = CARDS.find((item) => item.id === id);
 
@@ -46,225 +56,250 @@ const CardDetailPage = async ({
     notFound();
   }
 
-  const fxLabel =
-    card.fxPolicy.hasFxFee ?
-      `${card.fxPolicy.fxFeePercent ?? 2.5}% FX fee`
-    : "No FX fee";
+  const fxFee = getFxFeePercent(card);
+  const valueNotes = getCardValueNotes(card);
+  const bestFor = getBestForCategories(CARDS).get(card.id) ?? [];
+  const isCashBack = card.rewardType === "CASHBACK";
+
+  const facts = [
+    { label: "Annual fee", value: formatAnnualFee(card.annualFee) },
+    {
+      label: "Extra card fee",
+      value: formatExtraCardFee(card),
+      note:
+        card.annualFee === 0 && card.additionalCardFee === undefined
+          ? "The card is free, so a second person can get their own"
+          : undefined,
+    },
+    { label: "FX fee", value: fxFee === 0 ? "None" : formatPercent(fxFee) },
+    { label: "Minimum income", value: formatIncome(card.income), note: card.income?.note },
+    {
+      label: "Rewards",
+      value: card.rewardCurrency ?? formatRewardType(card.rewardType),
+      note: isCashBack
+        ? `Valued at $${getCardValueUnit(card)} per $1`
+        : `Valued at ${getCardValueUnit(card)}¢ per point`,
+    },
+    { label: "Redemption", value: card.redemption?.label ?? "Not published" },
+  ];
 
   return (
     <main className={styles.main}>
-      {/* Back navigation */}
       <div className={styles.backRow}>
-        <Link href="/" className={styles.backLink}>
-          ← Back to comparison
-        </Link>
+        <ExplorerLink view="browse" className={styles.backLink}>
+          ← All cards
+        </ExplorerLink>
+        <ExplorerLink view="compare" className={styles.backLink}>
+          Compare side by side
+        </ExplorerLink>
       </div>
 
-      {/* ── Hero ── */}
       <div className={styles.hero}>
-        <div className={styles.heroLeft}>
+        <CardArt card={card} size="lg" morph />
+        <div className={styles.heroText}>
           <h1 className={styles.cardName}>{card.displayName}</h1>
-          <p className={styles.issuer}>{card.issuer}</p>
-          <div className={styles.badgeRow}>
-            <span className={`${styles.badge} ${styles[`net${card.network}`]}`}>
-              {card.network}
-            </span>
-            <span className={styles.badge}>{card.rewardType}</span>
-            {!card.fxPolicy.hasFxFee && (
-              <span className={`${styles.badge} ${styles.badgeGreen}`}>
-                No FX Fee
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className={styles.heroRight}>
-          <div className={styles.feeStat}>
-            <span className={styles.feeLabel}>Annual fee</span>
-            <span className={styles.feeValue}>${card.annualFee}</span>
-          </div>
-          {typeof card.additionalCardFee === "number" && (
-            <div className={styles.feeStat}>
-              <span className={styles.feeLabel}>Auth card fee</span>
-              <span className={styles.feeValue}>
-                {card.additionalCardFee === 0 ?
-                  "Free"
-                : `$${card.additionalCardFee}`}
-              </span>
-            </div>
+          <p className={styles.issuer}>
+            {card.issuer} · {formatNetwork(card.network)}
+          </p>
+          <p className={styles.summary}>{card.summary}</p>
+          {bestFor.length > 0 && (
+            <ul className={styles.badgeRow} aria-label="Best for">
+              {bestFor.map((label) => (
+                <li key={label} className={styles.badge}>
+                  Best for {label}
+                </li>
+              ))}
+            </ul>
           )}
-          <div className={styles.feeStat}>
-            <span className={styles.feeLabel}>FX fee</span>
-            <span
-              className={`${styles.feeValue} ${
-                card.fxPolicy.hasFxFee ? styles.fxBad : styles.fxGood
-              }`}
-            >
-              {fxLabel}
-            </span>
-          </div>
         </div>
       </div>
 
-      {/* ── Earn rates ── */}
+      {card.upcomingChanges?.length ? (
+        <section className={styles.notice} aria-label="Announced changes">
+          <h2 className={styles.noticeTitle}>Changes coming</h2>
+          <ul className={styles.plainList}>
+            {card.upcomingChanges.map((change) => (
+              <li key={change.description}>
+                <strong>{formatDate(change.effective)}:</strong> {change.description}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <WelcomeOfferPanel card={card} />
+
+      <dl className={styles.facts}>
+        {facts.map((fact) => (
+          <div key={fact.label} className={styles.fact}>
+            <dt>{fact.label}</dt>
+            <dd>
+              {fact.value}
+              {fact.note && fact.note !== fact.value && (
+                <span className={styles.factNote}>{fact.note}</span>
+              )}
+            </dd>
+          </div>
+        ))}
+      </dl>
+
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Earn rates</h2>
         <div className={styles.tableWrap}>
           <table className={styles.earnTable}>
             <thead>
               <tr>
-                <th>Rate</th>
-                <th>Description</th>
-                <th>Applies to</th>
-                <th>Scope</th>
+                <th scope="col">Rate</th>
+                <th scope="col">On</th>
+                <th scope="col">Where</th>
+                <th scope="col">Est. return</th>
               </tr>
             </thead>
             <tbody>
-              {card.earnRates.map((rate) => {
-                return (
-                  <tr key={rate.id}>
-                    <td className={styles.rateCell}>
-                      <span className={styles.rateNum}>
-                        {formatRewardRate(card.rewardType, rate.rateMultiplier)}
+              {card.earnRates.map((rate) => (
+                <tr key={rate.id}>
+                  <td className={styles.rateNum}>
+                    {formatRewardRate(card.rewardType, rate.rateMultiplier)}
+                  </td>
+                  <td>
+                    <span className={styles.rateIcons}>
+                      {rate.mccTags.map((tag) => (
+                        <CategoryIcon key={tag} category={tag} />
+                      ))}
+                    </span>
+                    {rate.description}
+                    {rate.capped && <span className={styles.cappedChip}>Capped</span>}
+                  </td>
+                  <td className={styles.scope}>{formatScopeLabel(rate.locationScope)}</td>
+                  <td className={styles.estimate}>
+                    {formatPercent(toEstimatedValuePercent(card, rate))}
+                    {rate.mccTags.includes("usd-spend") && fxFee > 0 && (
+                      <span className={styles.estimateNote}>
+                        {formatPercent(toEstimatedValuePercent(card, rate) - fxFee)} after FX fee
                       </span>
-                    </td>
-                    <td>{rate.description}</td>
-                    <td>{rate.appliesTo ?? "See issuer terms"}</td>
-                    <td>
-                      <span className={styles.scopeChip}>
-                        {formatScopeLabel(rate.locationScope)}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
+                    )}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
+
+        {card.specificBrands?.length ? (
+          <>
+            <h3 className={styles.subTitle}>At specific brands</h3>
+            <ul className={styles.brandList}>
+              {card.specificBrands.map((brandRate) => (
+                <li key={brandRate.id}>
+                  <strong>
+                    {brandRate.id}{" "}
+                    {formatSpecificBrandRate(
+                      card.rewardType,
+                      brandRate.rateMultiplier,
+                      brandRate.description,
+                    )}
+                  </strong>
+                  <span>{brandRate.description}</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
+
+        {card.caps?.length ? (
+          <>
+            <h3 className={styles.subTitle}>Caps and limits</h3>
+            <ul className={styles.capList}>
+              {card.caps.map((cap) => (
+                <li key={cap}>{cap}</li>
+              ))}
+            </ul>
+          </>
+        ) : null}
+
+        {valueNotes && <p className={styles.valueNote}>{valueNotes}</p>}
       </section>
 
-      {/* ── Metadata row ── */}
-      <div className={styles.metaGrid}>
-        {card.rewardCurrency && (
-          <div className={styles.metaItem}>
-            <span className={styles.metaLabel}>Reward currency</span>
-            <span className={styles.metaValue}>{card.rewardCurrency}</span>
-          </div>
-        )}
-        <div className={styles.metaItem}>
-          <span className={styles.metaLabel}>Est. reward value</span>
-          <span className={styles.metaValue}>
-            {getCardValueUnit(card)}¢ per{" "}
-            {card.rewardType === "CASHBACK" ? "$1" : "point"}
-          </span>
-        </div>
-        {card.redemption && (
-          <div className={styles.metaItem}>
-            <span className={styles.metaLabel}>Redemption</span>
-            <span className={styles.metaValue}>{card.redemption.label}</span>
-          </div>
-        )}
-        {card.minimumIncome && (
-          <div className={styles.metaItem}>
-            <span className={styles.metaLabel}>Minimum income</span>
-            <span className={styles.metaValue}>{card.minimumIncome}</span>
-          </div>
-        )}
-      </div>
-
-      {/* ── Lounge + Benefits (two columns) ── */}
       <div className={styles.twoCol}>
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Lounge access</h2>
-          {card.lounges?.length ?
-            <ul className={styles.benefitList}>
-              {card.lounges.map((l) => (
-                <li key={l.program}>
-                  <span className={styles.benefitText}>{l.program}</span>
-                  <span className={styles.visitBadge}>
-                    {l.freeVisitsPerYear === "UNLIMITED" ?
-                      "Unlimited complimentary visits"
-                    : l.freeVisitsPerYear === 0 ?
-                      "Paid access only"
-                    : `${l.freeVisitsPerYear} complimentary visits / year`}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          : <p className={styles.emptyNote}>No lounge access included</p>}
+          <h2 className={styles.sectionTitle}>Reasons to get it</h2>
+          <ul className={`${styles.markList} ${styles.pros}`}>
+            {card.pros.map((pro) => (
+              <li key={pro}>{pro}</li>
+            ))}
+          </ul>
         </section>
-
-        {card.keyBenefits?.length ?
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>Key benefits</h2>
-            <ul className={styles.benefitList}>
-              {card.keyBenefits.map((b) => (
-                <li key={b}>
-                  <span className={styles.benefitText}>{b}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        : null}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Reasons to skip it</h2>
+          <ul className={`${styles.markList} ${styles.cons}`}>
+            {card.cons.map((con) => (
+              <li key={con}>{con}</li>
+            ))}
+          </ul>
+        </section>
       </div>
 
-      {/* ── Caps ── */}
-      {card.caps?.length ?
+      <div className={styles.twoCol}>
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Caps &amp; limitations</h2>
-          <ul className={styles.capList}>
-            {card.caps.map((cap) => (
-              <li key={cap}>{cap}</li>
-            ))}
-          </ul>
-        </section>
-      : null}
-
-      {card.specificBrands?.length ?
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Brand-specific boosts</h2>
-          <ul className={styles.benefitList}>
-            {card.specificBrands.map((brandRate) => (
-              <li key={brandRate.id}>
-                <span className={styles.benefitText}>
-                  {brandRate.id}:{" "}
-                  {formatSpecificBrandRate(
-                    card.rewardType,
-                    brandRate.rateMultiplier,
-                    brandRate.description,
-                  )}
-                </span>
-                <span className={styles.visitBadge}>
-                  {brandRate.description}
-                </span>
+          <h2 className={styles.sectionTitle}>Perks and lounge access</h2>
+          <ul className={`${styles.markList} ${styles.pros}`}>
+            {card.lounges?.map((lounge) => (
+              <li key={lounge.program}>
+                {lounge.program}: {formatLoungeVisits(lounge.freeVisitsPerYear).toLowerCase()}
+                {lounge.freeVisitsPerYear === "UNLIMITED" && " visits"}
+                {lounge.note && ` (${lounge.note})`}
               </li>
             ))}
+            {card.keyBenefits?.map((benefit) => (
+              <li key={benefit}>{benefit}</li>
+            ))}
           </ul>
+          {!card.lounges?.length && <p className={styles.emptyNote}>No lounge access included.</p>}
         </section>
-      : null}
 
-      {/* ── Notes ── */}
-      {card.notes ?
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Insurance</h2>
+          {card.insurance?.length ? (
+            <dl className={styles.insurance}>
+              {card.insurance.map((item) => (
+                <div key={item.kind}>
+                  <dt>{INSURANCE_LABELS[item.kind]}</dt>
+                  <dd>{item.coverage}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : (
+            <p className={styles.emptyNote}>No insurance included.</p>
+          )}
+        </section>
+      </div>
+
+      {card.notes ? (
         <p className={styles.noteSection}>
-          <span className={styles.noteLabel}>Note: </span>
+          <strong>Good to know: </strong>
           {card.notes}
         </p>
-      : null}
+      ) : null}
 
-      {/* ── Source ── */}
-      {card.sourceUrl ?
-        <p className={styles.sourceLine}>
-          Rates verified against the official issuer page:{" "}
-          <a
-            className={styles.sourceLink}
-            href={card.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {new URL(card.sourceUrl).hostname}
-          </a>
-        </p>
-      : null}
+      <footer className={styles.sources}>
+        <p>Last checked {formatDate(card.verifiedOn)}. Confirm with the issuer before you apply.</p>
+        <ul>
+          {card.sourceUrl && (
+            <li>
+              <a href={card.sourceUrl} target="_blank" rel="noopener noreferrer">
+                Official page ({new URL(card.sourceUrl).hostname})
+              </a>
+            </li>
+          )}
+          {card.sources?.map((source) => (
+            <li key={source.url}>
+              <a href={source.url} target="_blank" rel="noopener noreferrer">
+                {source.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </footer>
     </main>
   );
 };

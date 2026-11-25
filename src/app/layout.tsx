@@ -11,8 +11,9 @@ export const metadata: Metadata = {
 // Runs before first paint: if the user has explicitly chosen a theme, apply it
 // so their choice wins over the OS setting without a flash. When nothing is
 // stored, the CSS prefers-color-scheme media query already handles the system
-// theme, so we leave data-theme unset.
-const themeInitScript = `(function(){try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light"){document.documentElement.setAttribute("data-theme",t);}}catch(e){}})();`;
+// theme, so we leave data-theme unset. A deep link to the comparison is also
+// flagged, so the prerendered browse view doesn't show first.
+const themeInitScript = `(function(){try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light"){document.documentElement.setAttribute("data-theme",t);}}catch(e){}if(location.pathname==="/"&&/[?&]view=compare/.test(location.search)){document.documentElement.setAttribute("data-restoring","");}})();`;
 
 const RootLayout = ({
   children,

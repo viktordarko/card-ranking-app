@@ -38,7 +38,15 @@ export const SPENDING_CATEGORIES: SpendingCategory[] = [
     description: "Stand-alone grocery stores and supermarkets.",
     includes: ["Loblaws", "Metro", "Sobeys / IGA", "No Frills"],
     watchOut:
-      "Walmart and Costco usually code as general merchandise or wholesale club, so most cards pay only the base rate there.",
+      "Walmart and Costco usually don't code as grocery stores, so most cards pay only the base rate there.",
+  },
+  {
+    id: "costco",
+    kind: "bonus",
+    label: "Costco",
+    description: "Purchases inside Costco warehouses in Canada. Costco gas is under Gas.",
+    acceptedNetworks: ["MASTERCARD"],
+    watchOut: "Costco doesn't count as groceries on most cards, so it usually pays the base rate.",
   },
   {
     id: "gas",

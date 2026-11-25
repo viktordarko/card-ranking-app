@@ -48,3 +48,24 @@
     min-height: 1.9rem;
     cursor: pointer;
 }
+
+/* A <legend> isn't laid out as a flex item, so the group's gap skips it. */
+legend.filterGroupLabel {
+    margin-bottom: 0.4rem;
+}
+
+/* On a phone, one swipeable row instead of a screenful of controls. */
+@media (max-width: 600px) {
+    .filterBar {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
+
+    .filterGroup {
+        flex-shrink: 0;
+    }
+
+    .pillRow {
+        flex-wrap: nowrap;
+    }
+}

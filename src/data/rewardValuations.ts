@@ -6,26 +6,19 @@ export const REWARD_VALUE_PROFILES: RewardValueProfile[] = [
     label: "Amex Membership Rewards",
     centsPerPointOrPercentUnit: 2.0,
     notes:
-      "Valued at par with Aeroplan, never below it: MR transfers 1:1 to Aeroplan, so every Aeroplan redemption is reachable from MR — and MR keeps other transfer partners and non-travel options on top. Optimal transfers can push value well above 2¢ (up to ~10¢).",
+      "Valued at par with Aeroplan, never below it: MR transfers 1:1 to Aeroplan, so every Aeroplan redemption is reachable from MR, and MR can also move to other airlines' programs or be used outside travel. That extra choice counts as redemption flexibility, not as a higher point value.",
   },
   {
     id: "AEROPLAN",
     label: "Aeroplan",
     centsPerPointOrPercentUnit: 2.0,
     notes:
-      "Base valuation; flight redemptions (especially premium cabins) can push value well above 2¢ (up to ~10¢).",
+      "A target, not an average: 2¢ is the least worth accepting when redeeming for flights, and it isn't hard to find. Rare premium-cabin awards (such as ANA first class) have reached about 10¢. Some guides value Aeroplan lower, around 1.6¢, by averaging economy redemptions.",
   },
   {
     id: "SCENE_PLUS",
     label: "Scene+",
     centsPerPointOrPercentUnit: 1.0,
-  },
-  {
-    id: "CASHBACK_ROGERS_BOOSTED",
-    label: "Cashback with Rogers/Fido redemption boost",
-    centsPerPointOrPercentUnit: 1.5,
-    notes:
-      "Optimistic: assumes you are a Rogers/Fido/Shaw customer and redeem toward those bills, which unlocks the 1.5x boost. Without it, the value is ~1.0.",
   },
   {
     id: "CASHBACK_STANDARD",

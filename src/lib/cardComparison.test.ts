@@ -7,6 +7,7 @@ import {
   COMPARISON_ROWS,
   computeRowWinners,
   computeRowWorst,
+  getEffectiveCategoryValue,
 } from "./cardComparison";
 
 const cardById = (id: string): Card => {
@@ -47,6 +48,26 @@ const winnersFor = (label: string, cards: Card[] = CARDS): Set<string> =>
 const worstFor = (label: string, cards: Card[] = CARDS): Set<string> =>
   extremeAt(computeRowWorst(cards), label);
 
+describe("Costco row", () => {
+  it("shows the warehouse rate, with Costco.ca beside it", () => {
+    expect(cellFor("Costco", "cibc-costco-mastercard")).toMatchObject({
+      primary: "1%",
+      detail: "2% on Costco.ca, up to a cap",
+      emphasizePrimary: false,
+    });
+    expect(cellFor("Costco", "rogers-world-elite").primary).toBe("2%");
+  });
+
+  it("never ranks a card whose network isn't accepted", () => {
+    for (const id of ["amex-platinum-ca", "scotia-gold-amex", "td-aeroplan-vi"]) {
+      expect(cellFor("Costco", id).primary).toBe("Not accepted");
+      expect(getEffectiveCategoryValue(cardById(id), "costco")).toBe(0);
+    }
+    expect([...winnersFor("Costco")]).toEqual(["rogers-world-elite"]);
+    expect(worstFor("Costco").size).toBe(3);
+  });
+});
+
 describe("computeRowWinners / computeRowWorst", () => {
   it("returns one set per comparison row (parallel-array invariant)", () => {
     expect(computeRowWinners(CARDS)).toHaveLength(COMPARISON_ROWS.length);
@@ -74,13 +95,43 @@ describe("computeRowWinners / computeRowWorst", () => {
 
   it("ranks the no-FX-fee cards as the FX winners", () => {
     expect(winnersFor("FX fee").has("scotia-gold-amex")).toBe(true);
-    expect(winnersFor("FX fee").has("scotia-passport-vi")).toBe(true);
+    expect(winnersFor("FX fee").has("capital-one-quicksilver-we")).toBe(true);
     expect(winnersFor("FX fee").has("amex-platinum-ca")).toBe(false);
   });
 
   it("ranks Redemption by flexibility (cashable Costco best, store-locked CT Money worst)", () => {
     expect(winnersFor("Redemption").has("cibc-costco-mastercard")).toBe(true);
     expect(worstFor("Redemption").has("triangle-mastercard")).toBe(true);
+  });
+
+  it("marks nothing when every card ties (a highlight must single something out)", () => {
+    const subset = [cardById("amex-platinum-ca"), cardById("td-aeroplan-vi")];
+    expect(winnersFor("FX fee", subset).size).toBe(0); // both 2.5%
+    expect(worstFor("FX fee", subset).size).toBe(0);
+  });
+
+  it("names a best on a pure tiebreak, but no weakest", () => {
+    // Both return 3% on gas; Quicksilver's is easier to redeem, Scotia's isn't bad.
+    const subset = [cardById("scotia-gold-amex"), cardById("capital-one-quicksilver-we")];
+    expect(winnersFor("Gas", subset)).toEqual(new Set(["capital-one-quicksilver-we"]));
+    expect(worstFor("Gas", subset).size).toBe(0);
+  });
+
+  it("doesn't call most of a row the weakest", () => {
+    // Five of the seven cards charge 2.5%: worth no red at all.
+    expect(worstFor("FX fee").size).toBe(0);
+  });
+
+  it("never marks an unpriced welcome offer as the weakest", () => {
+    // Quicksilver's first-year match has no fixed value, so $0 isn't its rank.
+    expect(worstFor("Welcome offer").size).toBe(0);
+    expect(winnersFor("Welcome offer")).toEqual(new Set(["amex-platinum-ca"]));
+  });
+
+  it("keeps each group's rows together, so every group gets one heading", () => {
+    const groups = COMPARISON_ROWS.map((row) => row.group);
+    const headings = groups.filter((group, index) => group !== groups[index - 1]);
+    expect(new Set(headings).size).toBe(headings.length);
   });
 
   it("recomputes best/worst over the given subset only", () => {
@@ -116,44 +167,57 @@ describe("category rows derive from the registry", () => {
   });
 });
 
-describe("category winners and the redemption tiebreak", () => {
-  it("makes Groceries a no-brainer: Scotia Gold alone (6x partners, 5x fallback)", () => {
+describe("category winners and the tiebreak", () => {
+  it("makes Groceries a no-brainer: Scotia Gold alone (6x partners, 5x elsewhere)", () => {
     expect(winnersFor("Groceries")).toEqual(new Set(["scotia-gold-amex"]));
   });
 
-  it("makes Gas unambiguous: CIBC Dividend alone at 4%", () => {
-    expect(winnersFor("Gas")).toEqual(new Set(["cibc-dividend-vi"]));
+  it("gives Gas to the 3% that works everywhere and redeems most freely", () => {
+    // Four cards return 3% on gas. Costco's needs a Costco pump, so its cash-like
+    // redemption (5) doesn't count; Quicksilver (4) beats Scene+ and Aeroplan (3).
+    expect(winnersFor("Gas")).toEqual(new Set(["capital-one-quicksilver-we"]));
   });
 
-  it("breaks the Travel value tie by redemption flexibility (Amex 4 beats Passport 3)", () => {
-    // Both return an estimated 4% on travel; transferable MR is easier to use
-    // than Scene+, so Amex Platinum alone should read as the winner.
-    expect(winnersFor("Travel")).toEqual(new Set(["amex-platinum-ca"]));
+  it("ranks USD spend net of the FX fee, not on the headline rate", () => {
+    // Rogers' 3% behind a 2.5% fee loses to a plain 1% without one.
+    expect(getEffectiveCategoryValue(cardById("rogers-world-elite"), "usd-spend")).toBe(0.5);
+    expect(getEffectiveCategoryValue(cardById("scotia-gold-amex"), "usd-spend")).toBe(1);
+    expect(winnersFor("USD spend")).toEqual(new Set(["capital-one-quicksilver-we"]));
   });
 
   it("does not let a base rate share Transit gold with a true accelerator", () => {
-    // Rogers' boosted base rate ties Scotia Gold's 3x transit at 3% estimated
-    // value, but bill-locked Rogers redemption (2) loses to Scene+ (3).
     expect(winnersFor("Transit")).toEqual(new Set(["scotia-gold-amex"]));
   });
 
-  it("still shares the highlight when the tiebreaker also ties", () => {
-    // Dining within {Passport, TD}: both 2% estimated value, both flexibility 3.
-    const subset = [cardById("scotia-passport-vi"), cardById("td-aeroplan-vi")];
-    expect(winnersFor("Dining", subset)).toEqual(
-      new Set(["scotia-passport-vi", "td-aeroplan-vi"]),
-    );
+  it("prefers a base rate open to everyone over one for certain customers", () => {
+    // Amex, TD, and Rogers all return 2%, but Rogers' is for its own customers.
+    const subset = [
+      cardById("rogers-world-elite"),
+      cardById("td-aeroplan-vi"),
+      cardById("triangle-mastercard"),
+    ];
+    expect(winnersFor("Base earn", subset)).toEqual(new Set(["td-aeroplan-vi"]));
   });
 
-  it("applies the tiebreak to 'worst' too (lowest flexibility is the clearest loser)", () => {
-    // Dining within {Scotia Gold 5%, TD 2% f3, Dividend 2% f4}: the tied-worst
-    // pair resolves to TD, whose rewards are the harder of the two to use.
+  it("still shares the highlight when the tiebreaker also ties", () => {
+    // TD and Scotia both return 3% on any gas station, both flexibility 3.
     const subset = [
       cardById("scotia-gold-amex"),
       cardById("td-aeroplan-vi"),
-      cardById("cibc-dividend-vi"),
+      cardById("triangle-mastercard"),
     ];
-    expect(worstFor("Dining", subset)).toEqual(new Set(["td-aeroplan-vi"]));
+    expect(winnersFor("Gas", subset)).toEqual(new Set(["scotia-gold-amex", "td-aeroplan-vi"]));
+  });
+
+  it("applies the tiebreak to 'worst' too (lowest flexibility is the clearest loser)", () => {
+    // TD and Rogers both return 2% on dining (their base rate), but Rogers' is
+    // limited to its own customers.
+    const subset = [
+      cardById("scotia-gold-amex"),
+      cardById("td-aeroplan-vi"),
+      cardById("rogers-world-elite"),
+    ];
+    expect(worstFor("Dining", subset)).toEqual(new Set(["rogers-world-elite"]));
   });
 });
 
@@ -162,8 +226,67 @@ describe("category cells", () => {
     expect(cellFor("Groceries", "triangle-mastercard").primary).toBe("1.5%");
   });
 
-  it("shows Rogers USD at the boosted 4.5% value", () => {
-    expect(cellFor("USD spend", "rogers-world-elite").primary).toMatch(/^4\.5%/);
+  it("shows Rogers USD at 3%, with what is left after the FX fee", () => {
+    const cell = cellFor("USD spend", "rogers-world-elite");
+    expect(cell.primary).toBe("3%");
+    expect(cell.estimate).toContain("0.5% after FX fee");
+  });
+
+  it("says what a capped rate drops to, even when that isn't the base rate", () => {
+    // Past the cap Rogers pays everyone 1.5%, not its customers' 2% base.
+    expect(cellFor("USD spend", "rogers-world-elite").detail).toBe("1.5% past the cap");
+    expect(cellFor("Groceries", "triangle-mastercard").detail).toBe("1% past the cap");
+    expect(cellFor("Groceries", "td-aeroplan-vi").detail).toBe("1x past the cap");
+  });
+
+  it("says where a restricted rate stops, when nothing else covers the category", () => {
+    expect(cellFor("Travel", "scotia-gold-amex").detail).toBe("1x elsewhere");
+  });
+
+  it("labels the US-dollar estimate by whether the card charges an FX fee", () => {
+    expect(cellFor("USD spend", "scotia-gold-amex").estimate).toBe("≈ 1%, no FX fee");
+    expect(cellFor("USD spend", "amex-platinum-ca").estimate).toBe("≈ -0.5% after FX fee");
+  });
+
+  it("leaves out the estimate for cash back, where the rate already is one", () => {
+    expect(cellFor("Groceries", "capital-one-quicksilver-we").estimate).toBeUndefined();
+  });
+
+  it("keeps a base rate's cap and lower tier where it stands in for a bonus", () => {
+    const cell = cellFor("Dining", "rogers-world-elite");
+    expect(cell.capped).toBe(true);
+    expect(cell.detail).toBe("Base rate; 1.5% for everyone else");
+  });
+
+  it("prices and dates the welcome offer, and says when there is none", () => {
+    const offer = cellFor("Welcome offer", "scotia-gold-amex");
+    expect(offer.estimate).toBe("≈ $650");
+    expect(offer.detail).toBe("Ends Jan 3, 2027");
+    expect(cellFor("Welcome offer", "rogers-world-elite").primary).toBe("No public offer");
+  });
+
+  it("shows insurance limits, and plainly when a card has no cover", () => {
+    expect(cellFor("Mobile device", "cibc-costco-mastercard").primary).toContain("$1,000");
+    expect(cellFor("Mobile device", "rogers-world-elite").primary).toBe("Not covered");
+  });
+
+  it("ranks lounge access", () => {
+    expect(winnersFor("Lounge")).toEqual(new Set(["amex-platinum-ca"]));
+  });
+
+  it("states who a rate is for, and what everyone else gets", () => {
+    const base = cellFor("Base earn", "rogers-world-elite");
+    expect(base.primary).toBe("2%");
+    expect(base.condition).toContain("customers");
+    expect(base.detail).toBe("1.5% for everyone else");
+  });
+
+  it("puts the rate alone in the headline, with its condition beside it", () => {
+    const cell = cellFor("Groceries", "scotia-gold-amex");
+    expect(cell.primary).toBe("6x");
+    expect(cell.condition).toBe("at Scene+ partner grocers");
+    expect(cell.detail).toBe("5x elsewhere");
+    expect(cell.estimate).toBe("≈ 6%");
   });
 
   it("picks the best rate within a category (Costco gas 3%, not 2%)", () => {
@@ -194,7 +317,7 @@ describe("category cells", () => {
     expect(cellFor("Dining", "cibc-costco-mastercard").capped).toBeFalsy(); // restaurant uncapped
   });
 
-  it("gives the Scene+ cards an Entertainment bonus and others the base rate", () => {
+  it("gives Scotia Gold an Entertainment bonus and others the base rate", () => {
     expect(winnersFor("Entertainment").has("scotia-gold-amex")).toBe(true);
     // A card with no entertainment earn falls back to its base rate.
     expect(cellFor("Entertainment", "cibc-costco-mastercard").primary).toBe("1%");

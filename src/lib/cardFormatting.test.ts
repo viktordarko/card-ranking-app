@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatAnnualFee,
+  formatDate,
+  formatDollars,
+  formatExtraCardFee,
+  formatIncome,
   formatLoungeVisits,
+  formatPercent,
   formatRewardRate,
   formatScopeLabel,
   formatSpecificBrandRate,
@@ -59,5 +65,45 @@ describe("formatScopeLabel", () => {
     expect(formatScopeLabel("CA_ONLY")).toBe("Canada only");
     expect(formatScopeLabel("NETWORK_USD")).toBe("USD transactions");
     expect(formatScopeLabel("WORLDWIDE")).toBe("Worldwide");
+  });
+});
+
+describe("formatDate", () => {
+  it("keeps the calendar day in every time zone", () => {
+    // Parsed as local time, Dec 31 UTC would read Dec 30 in Canada.
+    expect(formatDate("2026-12-31")).toBe("Dec 31, 2026");
+    expect(formatDate("2027-01-01")).toBe("Jan 1, 2027");
+  });
+});
+
+describe("money and percentages", () => {
+  it("formats whole dollars, and spells out a free card", () => {
+    expect(formatDollars(1139)).toBe("$1,139");
+    expect(formatAnnualFee(0)).toBe("No fee");
+    expect(formatAnnualFee(799)).toBe("$799");
+  });
+
+  it("trims float noise and keeps the sign", () => {
+    expect(formatPercent(0.1 + 0.2)).toBe("0.3%");
+    expect(formatPercent(-0.5)).toBe("-0.5%");
+  });
+});
+
+describe("formatExtraCardFee", () => {
+  it("distinguishes a price, a free card, and one that doesn't need an extra", () => {
+    expect(formatExtraCardFee({ annualFee: 139, additionalCardFee: 75 })).toBe("$75");
+    expect(formatExtraCardFee({ annualFee: 0, additionalCardFee: 0 })).toBe("Free");
+    expect(formatExtraCardFee({ annualFee: 0 })).toBe("N/A");
+    expect(formatExtraCardFee({ annualFee: 120 })).toBe("Not published");
+  });
+});
+
+describe("formatIncome", () => {
+  it("joins the thresholds, falls back to the note, then says it is unknown", () => {
+    expect(formatIncome({ personal: 80_000, household: 150_000 })).toBe(
+      "$80,000 personal or $150,000 household",
+    );
+    expect(formatIncome({ note: "No minimum" })).toBe("No minimum");
+    expect(formatIncome(undefined)).toBe("Not published");
   });
 });

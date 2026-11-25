@@ -43,13 +43,22 @@ src/
 │       ├── page.tsx          # "/[id]" — card detail (SSG + generateMetadata)
 │       └── page.module.css
 ├── components/               # "/" client island, split into focused pieces
-│   ├── ComparisonMatrix.tsx  #   orchestrator: state, filtering, faceting
-│   ├── comparisonFilters.ts  #   pure useReducer state (selection + filters)
-│   ├── CardPicker.tsx        #   tier 1 — choose which cards to compare
-│   ├── FilterBar.tsx         #   tier 2 — network / reward / perks filters
+│   ├── CardExplorer.tsx      #   orchestrator: view, filtering, faceting, URL sync
+│   ├── comparisonFilters.ts  #   pure state: reducer, filter matching, URL codec
+│   ├── CardTile.tsx          #   one card in the browse view
+│   ├── CompareTray.tsx       #   picked cards, following the browse view
+│   ├── CardPicker.tsx        #   choose which cards the matrix compares
+│   ├── FilterBar.tsx         #   network / reward / fees and perks filters
 │   ├── FilterPill.tsx        #   reusable toggle pill (count + disabled state)
 │   ├── ActiveFilters.tsx     #   applied-filter summary + reset
 │   ├── MatrixTable.tsx       #   the side-by-side comparison table
+│   ├── UrlWatcher.tsx        #   tells the explorer the URL changed
+│   ├── ExplorerLink.tsx      #   link back to the explorer, keeping its state
+│   ├── explorerMemory.ts     #   last query string, for ExplorerLink
+│   ├── useToday.ts           #   the viewer's date (null while prerendering)
+│   ├── WelcomeOfferPanel.tsx #   detail page's offer; notices when it has ended
+│   ├── CardArt.tsx           #   drawn card face in the card's own colours
+│   ├── CategoryIcon.tsx      #   line icon per spending category
 │   ├── CategoryLegend.tsx    #   static "what counts in each category?" reference
 │   ├── ThemeToggle.tsx       #   light/dark switch in the header
 │   └── *.module.css          #   co-located styles per component
@@ -60,6 +69,9 @@ src/
 ├── lib/
 │   ├── rewardValuation.ts    # Points/cashback → estimated % value
 │   ├── cardComparison.ts     # Comparison-matrix rows + best/worst highlighting
+│   ├── cardHighlights.ts     # "Best for" badges + a tile's top earn rates
+│   ├── cardSorting.ts        # Sort keys and comparator
+│   ├── welcomeOffer.ts       # Welcome offer → estimated dollars
 │   └── cardFormatting.ts     # Display formatting helpers
 └── types/
     ├── card.ts               # Card, EarnRate, FxPolicy, LoungeBenefit, …
@@ -84,6 +96,12 @@ policy, and a list of **earn rates**. Notable fields:
 | `annualFee` / `additionalCardFee`                           | Used directly in the comparison matrix.                                                                |
 | `fxPolicy`                                                  | `{ hasFxFee, fxFeePercent? }` — foreign-transaction fee.                                               |
 | `earnRates`                                                 | The list of `EarnRate`s (see below).                                                                   |
+| `welcomeOffer`                                              | Public new-cardholder offer; `bonusPoints` / `bonusCash` price it, `expires` dates it; `firstYearMatch` scales the earn rates when the explorer's toggle is on. |
+| `insurance`                                                 | Coverage by kind with its limit; the main kinds get matrix rows.                                       |
+| `income`                                                    | Minimum personal / household income, or a note when there isn't one.                                   |
+| `summary`, `pros`, `cons`                                   | Editorial: who the card is for, and both sides of the argument.                                        |
+| `upcomingChanges`                                           | Announced changes that haven't taken effect yet (a test rejects past ones).                            |
+| `verifiedOn`, `sourceUrl`, `sources`                        | When the record was last checked, and against what.                                                    |
 | `lounges`, `caps`, `specificBrands`, `keyBenefits`, `notes` | Optional benefit metadata shown on the detail page.                                                    |
 
 ### `EarnRate`
@@ -96,6 +114,11 @@ Each `EarnRate` captures a single earning rule:
   meanings live in the spending-category registry (below).
 - `locationScope` — `"CA_ONLY" | "WORLDWIDE" | "NETWORK_USD"`, which governs where
   the rate is eligible.
+- `appliesTo` — set only when the rate covers less than its categories (certain
+  stores, certain customers). It is shown beside the rate and loses ties.
+- `capped` / `rateAfterCap` — the rate stops at a spend limit, and what it drops to
+  when that isn't the base rate (Rogers pays everyone 1.5% past the cap, not its
+  customers' 2%).
 
 ### Spending categories ([`data/categories.ts`](./src/data/categories.ts))
 
@@ -112,6 +135,8 @@ carries:
   groceries). This limit is deliberate: cap amounts, reset periods, and shared
   cap pools are *card* facts, so they stay in each card's `caps`, and the
   category definitions stay readable instead of becoming a rules manual.
+- `acceptedNetworks` — set when a place doesn't take every network (Costco
+  warehouses: Mastercard only). Other cards read "Not accepted" and never win;
 - `kind` — `"bonus"` (gets a comparison-matrix row), `"base"` (the Base earn
   row), or `"brand"` (a retailer family like Canadian Tire stores — real earn
   data, but not a true merchant category, so never a comparison row).
@@ -127,7 +152,7 @@ A profile assigns a **cents-per-point** (for points/MR) or a **percent-unit
 multiplier** (for cashback) to a reward currency, plus notes explaining the
 assumption. Profiles are defined in
 [`data/rewardValuations.ts`](./src/data/rewardValuations.ts) — for example
-`MR_AMEX = 2.0¢`, `SCENE_PLUS = 1.0¢`, `CASHBACK_ROGERS_BOOSTED = 1.5×`.
+`MR_AMEX = 2.0¢`, `SCENE_PLUS = 1.0¢`, `CASHBACK_STANDARD = 1.0×`.
 
 Keeping valuations in one place means changing "how much an Aeroplan point is
 worth" is a one-line edit that ripples through the whole comparison.
@@ -145,14 +170,18 @@ Examples:
 
 - A `2x` Membership Rewards rate at `2.0¢/pt` → **4%** estimated value.
 - A `3%` standard cashback rate at `1.0×` → **3%** estimated value.
-- A `3%` Rogers USD rate at the boosted `1.5×` profile → **4.5%** estimated value.
+- A `3%` Rogers USD rate behind a `2.5%` FX fee → **0.5%**: US-dollar spend is
+  ranked net of the fee (`getEffectiveCategoryValue`), so a plain 1% on a card that
+  waives the fee beats it.
 
 `toEstimatedBaseValuePercent` does the same for a card's best `"general"`
 (non-bonus) rate, which is used as the fallback "base earn" figure.
 
-> The valuations are intentionally conservative baselines. Point currencies like
-> Membership Rewards and Aeroplan can be worth substantially more with optimal
-> transfer-partner redemptions; the profile `notes` document these assumptions.
+> Membership Rewards and Aeroplan are valued at a **target**, not an average: 2¢ is
+> the least worth accepting when redeeming for flights, and it isn't hard to find.
+> Rare premium-cabin awards (such as ANA first class) have reached about 10¢. Some
+> guides publish lower figures (1.6¢ to 1.7¢); those average in economy redemptions,
+> and the app deliberately doesn't follow them. The profile `notes` document this.
 
 One valuation rule is worth spelling out — the **transfer floor**: a transferable
 currency is never valued below its best 1:1 transfer partner. Membership Rewards
@@ -173,9 +202,9 @@ separate layers:
   but it can only be spent at Canadian Tire. That is a _redemption_ limitation, not
   a lower value, so it lives on the card (`redemption.flexibility`), **not** in the
   point value.
-- **Rogers** cash back genuinely _is_ worth **1.5¢** — but only when redeemed
-  toward Rogers/Fido/Shaw bills. That is a real (conditional) value, so it stays in
-  the point value, with the condition surfaced in the card's `notes`.
+- **Rogers** cash back used to be worth 1.5¢ toward Rogers/Fido/Shaw bills, which
+  was a real (conditional) value and so belonged in the point value. That boost
+  ended on November 17, 2026; it is now worth a flat 1¢ on any purchase.
 
 Each card carries a `redemption` descriptor (`types/card.ts`) scored **1–5**, ranked
 by _where you can direct the value_ — not by how much it is worth:
@@ -183,14 +212,15 @@ by _where you can direct the value_ — not by how much it is worth:
 | Score | Meaning                                              | Example                                                       |
 | ----- | ---------------------------------------------------- | ------------------------------------------------------------- |
 | 5     | Cash, or a certificate you can cash out              | CIBC Costco — the warehouse register pays any overage in cash |
-| 4     | Statement credit, or points transferable to partners | Amex MR, CIBC Dividend                                        |
+| 4     | Statement credit, or points transferable to partners | Amex MR, Quicksilver, Rogers                                  |
 | 3     | Program points (travel / groceries within a program) | Scene+, Aeroplan                                              |
-| 2     | Conditional — full value only in a narrow way        | Rogers — toward Rogers/Fido/Shaw bills                        |
+| 2     | Conditional — full value only in a narrow way        | No current card                                               |
 | 1     | A single specific retailer, non-cashable             | Triangle — Canadian Tire Money                                |
 
 The comparison's **Redemption** row shows the label and ranks the score — and the
-score doubles as the **tiebreaker** in the earn-rate rows: when two cards return
-the same estimated value, the more flexible one alone takes the best-in-row
+score is the second half of the **tiebreaker** in the earn-rate rows: when two cards
+return the same estimated value, a rate covering the whole category beats a
+restricted one, and after that the more flexible reward takes the best-in-row
 highlight. This is why Costco and Triangle —
 both "store" rewards worth a full 1.0¢ on earn value — sit at opposite ends: the
 Costco certificate is effectively cashable, while CT Money is locked to Canadian
@@ -200,30 +230,32 @@ Tire.
 
 The home page renders a matrix of **cards (columns) × attributes (rows)**. The row
 model lives in `lib/`; the interactive UI lives in the
-[`ComparisonMatrix`](./src/components/ComparisonMatrix.tsx) client component (see
+[`CardExplorer`](./src/components/CardExplorer.tsx) client component (see
 [Rendering strategy](#rendering-strategy)). Each row is described declaratively by
 a `ComparisonRowDef`:
 
 ```ts
 interface ComparisonRowDef {
   label: string;
+  group: RowGroup; // heading the row sits under
   tooltip?: string; // hover definition (category rows)
   value: (card: Card) => ComparisonCell; // what to display
   numericValue?: (card: Card) => number; // basis for best/worst
   lowerIsBetter?: boolean; // e.g. fees
+  bestOnly?: boolean; // the low end isn't comparable
   tiebreak?: (card: Card) => number; // breaks numericValue ties (earn rows)
 }
 ```
 
-`COMPARISON_ROWS` defines the rows: Network, Reward currency, Annual fee, Auth card
-fee, FX fee, the **category rows** (USD spend, Dining, Groceries, Gas, Travel,
-Transit, Entertainment — generated from the spending-category registry's `"bonus"`
-entries, in registry order; each label links to the category's `CategoryLegend`
-entry via `categoryId` and carries a hover `tooltip` with the definition and
-watch-out), Base earn, Lounge, Brand/partner perks, and Redemption.
-Category cells whose accelerated rate reverts past an annual spend cap
-(`EarnRate.capped`) show a small **capped** badge, since the headline is an "up
-to" rate.
+`COMPARISON_ROWS` defines the rows in five groups: **Costs** (annual fee, extra card
+fee, FX fee, minimum income), **Welcome offer**, **Earn rates** (the **category rows**,
+generated from the spending-category registry's `"bonus"` entries in registry order,
+plus base earn and brand perks), **Travel & protection** (lounge and the main
+insurance kinds), and **Rewards** (network, currency, redemption). Each category label
+links to its `CategoryLegend` entry via `categoryId` and carries a hover `tooltip`
+with the definition and watch-out. Category cells whose accelerated rate reverts past
+an annual spend cap (`EarnRate.capped`) show a small **Capped** badge, since the
+headline is an "up to" rate.
 
 Two details worth highlighting:
 
@@ -234,18 +266,17 @@ Two details worth highlighting:
 - **Best / worst highlighting.** `computeRowWinners` and `computeRowWorst`
   (both thin wrappers over `computeRowExtremes`) compute, per numeric row, the set
   of card ids holding the best and worst value — respecting `lowerIsBetter` for fee
-  rows. On earn rows, a tie on estimated value is broken by **redemption
-  flexibility** (`row.tiebreak`): between two cards returning the same percentage,
-  the one whose rewards are easier to use is genuinely better, so it alone takes
-  the highlight (e.g. Amex Platinum's transferable MR beats Scene+ when both earn
-  an estimated 4% on travel — and a card's mere base rate can't share gold with a
-  true accelerator worth the same on paper). Only cards tied on value *and*
-  flexibility share; fee rows keep plain ties. `ComparisonMatrix` recomputes all
-  of this over the **currently filtered** cards (and skips highlighting when fewer
-  than two cards are shown), so "best in row" always reflects what's on screen.
+  rows. On earn rows, `getCategoryTiebreak` decides equal returns: a rate for the
+  whole category beats one limited to certain stores or customers (so "3% at Costco
+  gas stations" can't outrank 3% anywhere), then the easier-to-redeem reward wins.
+  A highlight has to single something out, so a row where every card ties gets none,
+  "weakest" is dropped when it would cover more than half the row, and it isn't shown
+  at all for two cards. `CardExplorer` recomputes all of this over the **currently
+  visible** cards, so "best in row" always reflects what's on screen.
 
-Category cells also surface **fallback behavior** — e.g. "5x … falls back to 1x on
-non-bonus spend" — so a headline rate is never shown without its caveat.
+Category cells also surface **conditions and fallbacks** as separate lines — "6x",
+"at Scene+ partner grocers", "5x elsewhere" — so a headline rate is never shown
+without its caveat, and the rate itself stays scannable.
 
 ## Formatting ([`lib/cardFormatting.ts`](./src/lib/cardFormatting.ts))
 
@@ -257,7 +288,7 @@ keeps the components free of formatting branches.
 
 | Route   | File                                           | Rendering                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | ------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`     | [`app/page.tsx`](./src/app/page.tsx)           | Static **Server Component** shell (heading + metadata) that renders the [`ComparisonMatrix`](./src/components/ComparisonMatrix.tsx) **client island**. `ComparisonMatrix` owns all the state and derived data and composes presentational pieces — [`CardPicker`](./src/components/CardPicker.tsx), [`FilterBar`](./src/components/FilterBar.tsx) (built from a reusable [`FilterPill`](./src/components/FilterPill.tsx)), [`ActiveFilters`](./src/components/ActiveFilters.tsx), and [`MatrixTable`](./src/components/MatrixTable.tsx). The per-card picker, filtering (network, reward type, no-FX, lounge), and best/worst recomputation run in the browser. The selection + filter state is one cohesive unit driven by `useReducer` ([`comparisonFilters.ts`](./src/components/comparisonFilters.ts) — a pure, unit-tested reducer), with derived data (filtered cards, faceted counts, winners) via `useMemo`; the picker and filters compose (a card shows only if it is both selected and passes every filter), and winners are recomputed over whatever set is visible. Each filter option carries a **live faceted count** and is **disabled when choosing it would leave zero cards** — computed against every _other_ active filter, so a filter can never empty the table. Applied filters are echoed as removable tags in `ActiveFilters` with a one-click **Reset filters** (separate from the picker's own **Clear**). Below the island, the page renders the static [`CategoryLegend`](./src/components/CategoryLegend.tsx) Server Component. The initial HTML is prerendered at build time. |
+| `/` | [`app/page.tsx`](./src/app/page.tsx) | Static **Server Component** shell that renders the [`CardExplorer`](./src/components/CardExplorer.tsx) **client island**, which owns the state and composes presentational pieces: [`CardTile`](./src/components/CardTile.tsx) and [`CompareTray`](./src/components/CompareTray.tsx) for browsing, [`CardPicker`](./src/components/CardPicker.tsx) and [`MatrixTable`](./src/components/MatrixTable.tsx) for comparing, [`FilterBar`](./src/components/FilterBar.tsx) and [`ActiveFilters`](./src/components/ActiveFilters.tsx) for both. View, sort, picks, and filters are one unit driven by `useReducer` ([`comparisonFilters.ts`](./src/components/comparisonFilters.ts), pure and unit-tested), with derived data via `useMemo`. The state is mirrored to the query string with `history.replaceState`: the page prerenders the default view, then adopts the URL's state on mount and whenever something else changes the URL ([`UrlWatcher`](./src/components/UrlWatcher.tsx), in its own Suspense boundary so the card list stays prerendered), and unknown values in an old link are dropped. No picks means "compare everything"; explicit picks win over filters, so a filter can't empty a hand-made comparison. Offers past their end date are dropped in the browser (`useToday`), since the static page can be older than the offer. Each filter option carries a **live faceted count** against every _other_ active filter and is **disabled at zero**, so a filter can never empty the list. Below the island sits the static [`CategoryLegend`](./src/components/CategoryLegend.tsx). |
 | `/[id]` | [`app/[id]/page.tsx`](./src/app/[id]/page.tsx) | SSG. `generateStaticParams` prerenders one page per card and `generateMetadata` gives each its own `<title>`; `dynamicParams = false` returns 404 for unknown ids. Static routes (`/`) take precedence over the dynamic segment.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 Because all data is local and known at build time, `next build` prerenders every
@@ -298,8 +329,8 @@ The dark palette is applied through two triggers:
    and syncs across tabs (`storage`). `color-scheme` is set per theme so native
    form controls and scrollbars match.
 
-The branded table header stays deep blue in both themes by design; only the
-on-blue text uses fixed `rgba(255,255,255,…)` values rather than tokens.
+Card faces (`CardArt`) are the one exception: each card's own colours come from its
+data record, so they look the same in both themes.
 
 ## Tooling
 
@@ -332,8 +363,9 @@ otherwise break silently or guards a decision baked into the model:
   valuable set for a data-driven app. Asserts unique ids, that every
   `rewardValueProfileId` resolves (a typo would silently value a card at 1¢), that
   a rate flagged `capped` has documented `caps`, that FX-charging cards state a
-  percentage, that `sourceUrl`s are valid https, etc. These catch the exact
-  mistakes made when hand-editing card data.
+  percentage, that source URLs are valid https, that dates are real calendar days,
+  that announced changes and offers were still ahead when the card was checked, etc.
+  These catch the exact mistakes made when hand-editing card data.
 - **Category registry integrity** ([`data/categories.test.ts`](./src/data/categories.test.ts))
   — every tag used in card data has a registry entry (a missing one would silently
   drop its matrix row and legend definition), every `"bonus"` category is earned by
@@ -342,11 +374,13 @@ otherwise break silently or guards a decision baked into the model:
   contiguous block in registry order, each with a definition tooltip.
 - **Valuation & ranking invariants** — flexible points rank above plain cash back,
   a lower fee wins its row (`lowerIsBetter` sign-flip guard), value ties resolve by
-  redemption flexibility (sharing the highlight only on full ties), best/worst
-  recomputes over a subset, and descriptive rows aren't ranked.
+  coverage and then redemption flexibility (sharing the highlight only on full ties),
+  best/worst recomputes over a subset, and descriptive rows aren't ranked.
+- **Explorer state** — the reducer is pure, the URL round-trips every filter and
+  drops values it doesn't recognise, and sorting follows the matrix's tiebreak.
 - **Regression guards for specific decisions** — CT Money stays at full 1¢ value
   (its constraint is redemption, not value), TD claims no general-travel bonus
-  (Air Canada is a brand perk), Rogers USD shows its boosted value, and `capped`
+  (Air Canada is a brand perk), Rogers USD is ranked net of its FX fee, and `capped`
   markers appear only on capped accelerators.
 
 Run with `pnpm test`; the same command runs in CI

@@ -13,25 +13,37 @@ currencies can be judged apples-to-apples.
 
 > **Disclaimer:** This is a personal side project for learning and comparison. The
 > card data is hand-curated, illustrative, and may be out of date or incomplete.
-> Reward valuations are conservative estimates, not guarantees. **Nothing here is
+> Reward valuations are estimates, not guarantees. **Nothing here is
 > financial advice** — always confirm details against the issuer's official terms.
 
 ## What it does
 
-- **Filterable comparison matrix** (`/`) — all cards as columns, key attributes as
-  rows (fees, FX, category earn rates, lounge access, perks). Pick exactly which
-  cards to line up, then filter by network, reward type, no-FX-fee, and lounge
-  access; each filter shows a live count and disables itself when it would leave no
-  cards, so you can't filter the table down to nothing. Applied filters are shown as
-  removable tags with a one-click reset. The best value in each numeric row is
-  highlighted green and the worst red — recomputed over whatever set is on screen.
-  Ties on estimated earn value are broken by redemption flexibility (the easier-to-use
-  reward wins the highlight); only cards tied on both share it.
+- **Browse view** (`/`) — one tile per card: fees, welcome offer with its estimated
+  value and end date, top earn rates, and "Best for" badges. Sort by annual fee,
+  welcome offer, or best return in any category, and tick **Compare** to collect
+  cards in a tray.
+- **Comparison matrix** (`/?view=compare`) — the picked cards (or all of them) as
+  columns and their attributes as grouped rows: costs, welcome offer, earn rates,
+  travel and protection, rewards. The card names and row labels stay in view while
+  you scroll. The best value in each numeric row is highlighted green and the
+  weakest marked red, recomputed over whatever is on screen. Equal returns are
+  decided by coverage (a rate for the whole category beats one for certain stores),
+  then by how easily the reward redeems.
+- **First-year match** — a toggle that includes offers matching everything a card earns
+  in its first year, and re-ranks with them. Any limit on the match is shown.
+- **Rogers customer** — on by default; turn it off to rank Rogers at its 1.5% rate for
+  people without Rogers, Fido, or Shaw service.
+- **Filters that can't dead-end** — network, reward type, no annual fee, no FX fee,
+  and lounge access. Each filter shows a live count and disables itself when it
+  would leave no cards; applied filters appear as removable tags.
+- **Shareable state** — the view, sort, picked cards, and filters live in the URL,
+  so a comparison can be sent to someone and survives a trip to a detail page.
 - **Normalized rewards** — a 2x Membership Rewards rate, a 5x points rate, and a 3%
   cashback rate are converted to a comparable estimated percentage value, so
   rankings are fair across reward currencies.
-- **Fallback-aware cells** — accelerated rates are shown together with what they
-  fall back to (e.g. "5x … falls back to 1x on non-bonus spend").
+- **Fallback-aware cells** — an accelerated rate is shown with its condition and
+  what you get otherwise (e.g. "6x at Scene+ partner grocers, 5x elsewhere", or
+  "3% … 1.5% past the cap"). US-dollar spend is ranked net of the FX fee.
 - **Categories, explained where you need them** — every category row label links
   to its definition in the "What counts in each category?" reference below the
   table: what typically counts, plus its most common merchant-coding gotcha
@@ -39,29 +51,24 @@ currencies can be judged apples-to-apples.
   opens the reference and highlights that entry; a hover tooltip carries the
   same definition as a mouse shortcut. Rows and reference render from one typed
   category registry, so the table and its definitions can't drift.
-- **Per-card detail pages** (`/[id]`) — earn-rate breakdown, lounge access, key
-  benefits, spending caps, brand-specific boosts, notes, the reward valuation, and a
-  link to the official issuer page each card was fact-checked against. Each page is
-  statically generated at build time.
+- **Per-card detail pages** (`/[id]`) — announced changes, the welcome offer, earn
+  rates with their estimated return, caps, reasons to get or skip the card, perks,
+  insurance limits, and links to every source, with the date the record was last
+  checked. Each page is statically generated at build time.
 
 ## Screenshots
 
-**Comparison matrix** (`/`) — pick exactly which cards to line up, then filter by
-network, reward type, and perks. Every filter shows a live count, and the best value
-in each numeric row is highlighted green / the worst red across whatever set is on
-screen:
+**Browse** (`/`) — what each card costs, earns, and offers right now:
 
-![Comparison matrix showing eight Canadian credit cards side-by-side with a card picker, a filter toolbar with counts, and best/worst cells highlighted green and red](docs/screenshots/home.png)
+![Browse view with one tile per card showing fees, welcome offer, earn rates, and best-for badges](docs/screenshots/home.png)
 
-**Dark mode + faceted filters** — the theme follows the OS setting (with a manual
-toggle in the header); filters that would leave no cards disable themselves, and the
-applied filters show as removable tags with a one-click reset:
+**Compare** (`/?view=compare`) — the same data side by side, here in dark mode:
 
-![Comparison matrix in dark mode filtered to Mastercard cards, showing the active-filter summary tag, a reset link, and the disabled No-FX-fee and Lounge-access filters](docs/screenshots/home-dark.png)
+![Comparison matrix in dark mode with grouped rows and the best value in each row highlighted green](docs/screenshots/home-dark.png)
 
-**Card detail** (`/[id]`) — full earn rates, lounge access, benefits, caps, valuation, and source link:
+**Card detail** (`/[id]`) — announced changes, offer, earn rates, insurance, and sources:
 
-![Card detail page for the Amex Platinum showing earn rates, lounge access and benefits](docs/screenshots/card-detail.png)
+![Card detail page for the Amex Platinum showing announced changes, the welcome offer, and earn rates](docs/screenshots/card-detail.png)
 
 ## Tech stack
 
@@ -119,7 +126,7 @@ pnpm start
 ```
 src/
 ├── app/         # App Router routes, layout, and route-scoped CSS Modules
-├── components/  # Client UI island (ComparisonMatrix orchestrator + focused pieces)
+├── components/  # Client UI island (CardExplorer orchestrator + focused pieces)
 ├── data/        # Card portfolio, reward-value profiles, category registry
 ├── lib/         # Pure logic: valuation, comparison, formatting
 └── types/       # Shared domain model (Card, EarnRate, RewardValueProfile, …)
@@ -152,7 +159,9 @@ worth 1¢. Full details in
 
 ## Adding or updating cards
 
-1. Add or edit a `Card` object in [`src/data/cards.ts`](./src/data/cards.ts).
+1. Add or edit a `Card` object in [`src/data/cards.ts`](./src/data/cards.ts), and set
+   `verifiedOn` to the day you checked it. An announced change goes in
+   `upcomingChanges` until it takes effect; then move it into the card's own fields.
 2. If it uses a new reward currency, add a profile to
    [`src/data/rewardValuations.ts`](./src/data/rewardValuations.ts).
 3. Run `pnpm lint && pnpm typecheck && pnpm build`.

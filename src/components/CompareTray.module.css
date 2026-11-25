@@ -1,0 +1,114 @@
+.tray {
+    position: sticky;
+    bottom: 0.75rem;
+    z-index: 40;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem 1rem;
+    margin-top: 1.25rem;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    background: var(--surface);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.22);
+}
+
+.picks {
+    display: flex;
+    flex: 1 1 14rem;
+    gap: 0.45rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0.3rem;
+    list-style: none;
+    overflow-x: auto;
+}
+
+.pick {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.3rem 0.6rem 0.3rem 0.35rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 9px;
+    background: var(--surface-subtle);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.pick:hover {
+    border-color: var(--danger);
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin-left: auto;
+}
+
+.clear {
+    padding: 0.4rem 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--link);
+    cursor: pointer;
+}
+
+.clear:hover {
+    text-decoration: underline;
+}
+
+.compare {
+    padding: 0.55rem 1rem;
+    border: 0;
+    border-radius: 9px;
+    font: inherit;
+    font-size: 0.86rem;
+    font-weight: 600;
+    background: var(--primary);
+    color: var(--on-primary);
+    cursor: pointer;
+}
+
+.compare:hover:not(:disabled) {
+    filter: brightness(1.15);
+}
+
+.compare:disabled {
+    background: var(--chip-neutral-bg);
+    color: var(--chip-neutral-text);
+    cursor: default;
+}
+
+.pick:focus-visible,
+.clear:focus-visible,
+.compare:focus-visible {
+    outline: 2px solid var(--primary-accent);
+    outline-offset: 2px;
+}
+
+/* The name says which card it is; the thumbnail can go. */
+@media (max-width: 520px) {
+    .pick > span:first-child {
+        display: none;
+    }
+
+    .pick {
+        padding-left: 0.6rem;
+    }
+}
+
+@media print {
+    .tray {
+        display: none;
+    }
+}

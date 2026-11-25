@@ -13,7 +13,14 @@
 
 .subheading {
     color: var(--text-secondary);
-    margin: 0 0 1.5rem;
+    margin: 0;
     font-size: 0.938rem;
     max-width: 760px;
+    text-wrap: pretty;
+}
+
+.checked {
+    margin: 0.35rem 0 1.5rem;
+    font-size: 0.82rem;
+    color: var(--text-muted);
 }

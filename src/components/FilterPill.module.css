@@ -1,4 +1,6 @@
 .pill {
+    position: relative; /* contains the visually hidden checkbox */
+    flex-shrink: 0;
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
@@ -41,6 +43,5 @@
 .pillCount {
     font-size: 0.68rem;
     font-weight: 600;
-    opacity: 0.75;
     font-variant-numeric: tabular-nums;
 }

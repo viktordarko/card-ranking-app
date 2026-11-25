@@ -1,19 +1,23 @@
+import CardExplorer from "../components/CardExplorer";
 import CategoryLegend from "../components/CategoryLegend";
-import ComparisonMatrix from "../components/ComparisonMatrix";
 import { CARDS } from "../data/cards";
+import { formatDate } from "../lib/cardFormatting";
 import styles from "./page.module.css";
+
+// The page is only as fresh as its stalest card, so that is the date it shows.
+const lastChecked = CARDS.map((card) => card.verifiedOn).toSorted()[0];
 
 const HomePage = () => {
   return (
     <main className={styles.main}>
-      <h1 className={styles.heading}>Canadian Personal Credit Card Comparison</h1>
+      <h1 className={styles.heading}>Compare Canadian credit cards</h1>
       <p className={styles.subheading}>
-        Compare {CARDS.length} Canadian personal credit cards side-by-side — choose which cards to
-        line up, filter by network, reward type, and perks, then click any card name for full
-        details.
+        {CARDS.length} personal cards with their fees, offers, and earn rates converted to one
+        estimated cash return.
       </p>
+      {lastChecked && <p className={styles.checked}>Last checked {formatDate(lastChecked)}</p>}
 
-      <ComparisonMatrix cards={CARDS} />
+      <CardExplorer cards={CARDS} />
       <CategoryLegend />
     </main>
   );

@@ -68,9 +68,58 @@ describe("card data integrity", () => {
 
   it("uses valid https source URLs", () => {
     for (const card of CARDS) {
-      if (card.sourceUrl) {
-        expect(new URL(card.sourceUrl).protocol, card.id).toBe("https:");
+      const urls = (card.sources ?? []).map((source) => source.url);
+      for (const url of card.sourceUrl ? [card.sourceUrl, ...urls] : urls) {
+        expect(new URL(url).protocol, card.id).toBe("https:");
       }
+    }
+  });
+
+  it("writes every date as a real ISO calendar day", () => {
+    // formatDate would print "Invalid Date" for anything else.
+    for (const card of CARDS) {
+      const dates = [
+        card.verifiedOn,
+        card.welcomeOffer?.expires,
+        ...(card.upcomingChanges ?? []).map((change) => change.effective),
+      ];
+      for (const date of dates) {
+        if (date !== undefined) {
+          expect(new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10), card.id).toBe(date);
+        }
+      }
+    }
+  });
+
+  it("only lists changes that were still ahead when the card was checked", () => {
+    // A change that has taken effect belongs in the card's own fields.
+    for (const card of CARDS) {
+      for (const change of card.upcomingChanges ?? []) {
+        expect(change.effective > card.verifiedOn, `${card.id}: ${change.effective}`).toBe(true);
+      }
+    }
+  });
+
+  it("only lists welcome offers that were open when the card was checked", () => {
+    for (const card of CARDS) {
+      const expires = card.welcomeOffer?.expires;
+      if (expires) {
+        expect(expires >= card.verifiedOn, `${card.id}: ${expires}`).toBe(true);
+      }
+    }
+  });
+
+  it("lists each kind of insurance at most once per card", () => {
+    for (const card of CARDS) {
+      const kinds = (card.insurance ?? []).map((item) => item.kind);
+      expect(new Set(kinds).size, card.id).toBe(kinds.length);
+    }
+  });
+
+  it("gives every card both sides of the argument", () => {
+    for (const card of CARDS) {
+      expect(card.pros.length, card.id).toBeGreaterThan(0);
+      expect(card.cons.length, card.id).toBeGreaterThan(0);
     }
   });
 });

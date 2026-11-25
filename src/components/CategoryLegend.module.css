@@ -93,5 +93,5 @@
 
 .watchOut strong {
     font-weight: 600;
-    color: var(--capped-text);
+    color: var(--warn-text);
 }

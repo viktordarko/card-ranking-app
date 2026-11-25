@@ -1,177 +1,263 @@
 .tableWrap {
-    overflow-x: auto;
+    --label-width: 190px;
+    --card-width: 150px;
+
+    /* Contains the cells' visually hidden (absolute) text, which would otherwise
+       escape this scroller and widen the whole page on small screens. */
+    position: relative;
+    overflow: auto;
+    max-height: calc(100dvh - 5.5rem);
+    /* Keep a focused link clear of the sticky card names and row labels. */
+    scroll-padding: 8rem 0 0 var(--label-width);
     border: 1px solid var(--border-strong);
-    border-radius: 10px;
+    border-radius: 14px;
+    background: var(--surface);
     box-shadow: var(--shadow-table);
 }
 
+.tableWrap:focus-visible {
+    outline: 2px solid var(--primary-accent);
+    outline-offset: 2px;
+}
+
 .table {
-    border-collapse: collapse;
+    /* Not "collapse": collapsed borders don't travel with sticky cells. */
+    border-collapse: separate;
+    border-spacing: 0;
+    /* Fixed, so the card columns being compared are always equally wide. */
+    table-layout: fixed;
     width: 100%;
-    min-width: 980px;
+    min-width: calc(var(--label-width) + var(--card-count) * var(--card-width));
     font-size: 0.85rem;
 }
 
-/* ── Header row ── */
+/* ── Header row (sticks to the top of the scroller) ── */
 
-.table thead {
-    background: var(--primary);
-    color: var(--on-primary);
+.cornerCell,
+.cardHead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-strong);
 }
 
 .cornerCell {
-    padding: 0.75rem 1rem;
-    min-width: 130px;
+    left: 0;
+    z-index: 3;
+    width: var(--label-width);
+    border-right: 1px solid var(--border-strong);
 }
 
 .cardHead {
-    padding: 0.7rem 0.75rem;
-    text-align: center;
-    font-weight: 600;
-    min-width: 120px;
-    border-left: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 0.8rem 0.75rem;
     vertical-align: top;
 }
 
 .cardLink {
-    display: block;
-    color: var(--on-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--text);
 }
 
 .cardName {
-    display: block;
     font-size: 0.82rem;
-    font-weight: 600;
+    font-weight: 700;
+    line-height: 1.3;
     text-decoration: underline;
+    text-decoration-color: var(--border-dashed);
     text-underline-offset: 3px;
-    text-decoration-color: rgba(255, 255, 255, 0.45);
-    line-height: 1.35;
 }
 
 .cardLink:hover .cardName {
-    text-decoration-color: #ffffff;
+    color: var(--link);
+    text-decoration-color: currentColor;
 }
 
-.cardDetails {
+.cardLink:focus-visible {
+    outline: 2px solid var(--primary-accent);
+    outline-offset: 4px;
+    border-radius: 4px;
+}
+
+/* ── Group headings ── */
+
+.groupRow th {
+    padding: 0;
+    text-align: left;
+    background: var(--surface-subtle);
+    border-bottom: 1px solid var(--border);
+}
+
+/* Stays readable while the columns scroll sideways under it. */
+.groupLabel {
+    position: sticky;
+    left: 0;
     display: inline-block;
-    margin-top: 0.4rem;
-    font-size: 0.62rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    color: #93c5fd;
-    white-space: nowrap;
-}
-
-.cardLink:hover .cardDetails {
-    color: #ffffff;
-}
-
-.cardIssuer {
-    display: block;
-    font-size: 0.68rem;
-    font-weight: 400;
-    color: rgba(255, 255, 255, 0.6);
-    margin-top: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text);
 }
 
 /* ── Row label (first column) ── */
 
 .rowLabel {
-    padding: 0.55rem 1rem;
-    font-weight: 600;
-    font-size: 0.78rem;
-    text-align: left;
-    color: var(--text-secondary);
-    white-space: nowrap;
-    background: var(--surface-subtle);
-    border-right: 1px solid var(--border-strong);
-    border-top: 1px solid var(--border);
     position: sticky;
     left: 0;
     z-index: 1;
+    padding: 0.65rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: left;
+    color: var(--text-secondary);
+    background: var(--surface);
+    border-right: 1px solid var(--border-strong);
+    border-bottom: 1px solid var(--border);
 }
 
 /* Category labels link to their definition in the legend below the table
    (plus a hover tooltip); the dotted underline is the cue. */
 .rowLabelHint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
     color: inherit;
     text-decoration: underline dotted;
     text-decoration-color: var(--text-muted);
     text-underline-offset: 3px;
-    cursor: help;
 }
 
 .rowLabelHint:hover {
     color: var(--primary-accent);
-    text-decoration-color: var(--primary-accent);
+    text-decoration-color: currentColor;
+}
+
+.rowIcon {
+    flex-shrink: 0;
+    color: var(--primary-accent);
 }
 
 /* ── Data cells ── */
 
 .cell {
-    padding: 0.55rem 0.6rem;
+    padding: 0.65rem 0.7rem;
     text-align: center;
-    border-left: 1px solid var(--border);
-    border-top: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.4;
     color: var(--text);
-    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+}
+
+.row:last-child .cell,
+.row:last-child .rowLabel {
+    border-bottom: 0;
+}
+
+.cellMuted {
+    color: var(--text-muted);
 }
 
 .primaryValue {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.estimate {
     display: block;
+    font-size: 0.76rem;
     font-weight: 600;
+    color: var(--text-secondary);
 }
 
 .subValue {
     display: block;
-    margin-top: 0.2rem;
-    font-size: 0.7rem;
+    margin-top: 0.1rem;
+    font-size: 0.74rem;
+    font-weight: 400;
     color: var(--text-muted);
-    line-height: 1.4;
 }
 
 .capped {
-    display: block;
-    margin-top: 0.2rem;
-    font-size: 0.58rem;
+    display: inline-block;
+    margin-top: 0.25rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
     font-weight: 500;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--capped-text);
+    background: var(--warn-bg);
+    color: var(--warn-text);
 }
 
-/* Alternating rows */
-.table tbody tr:nth-child(even) .cell {
-    background: var(--surface-alt);
-}
-
-.table tbody tr:nth-child(even) .rowLabel {
-    background: var(--surface-subtle-alt);
-}
-
-/* Hover */
-.table tbody tr:hover .cell {
+.row:hover .cell,
+.row:hover .rowLabel {
     background: var(--row-hover);
 }
 
-.table tbody tr:hover .rowLabel {
-    background: var(--rowlabel-hover);
+/* Best gets a fill; weakest only a marker and a text colour, so the wins stand
+   out. The marker is there for anyone who can't tell the red apart. */
+.row .cellBest,
+.row:hover .cellBest {
+    background: var(--best-bg);
+    color: var(--best-text);
+    font-weight: 700;
 }
 
-/* Best-in-row winner cell */
-.cellBest {
-    background: var(--best-bg) !important;
-    color: var(--best-text) !important;
-    font-weight: 700;
+.cellBest .estimate,
+.cellBest .subValue {
+    color: inherit;
 }
 
 .cellWorst {
-    background: var(--worst-bg) !important;
-    color: var(--worst-text) !important;
-    font-weight: 700;
+    color: var(--worst-text);
 }
 
-/* Highlight rows (key comparison points) */
-.rowHighlight .rowLabel {
-    color: var(--primary-accent);
+.cellWorst > span:first-child::before {
+    content: "▾ " / "";
+}
+
+.cellBest > span:first-child::before {
+    content: "✓ " / "";
+}
+
+@media (max-width: 600px) {
+    .tableWrap {
+        --label-width: 112px;
+        --card-width: 136px;
+    }
+
+    .rowLabel {
+        padding: 0.6rem 0.6rem;
+        font-size: 0.75rem;
+    }
+
+    .groupLabel {
+        padding: 0.45rem 0.6rem;
+    }
+
+    .rowIcon {
+        display: none;
+    }
+}
+
+/* On paper there is no scrolling: print every row. */
+@media print {
+    .tableWrap {
+        max-height: none;
+        overflow: visible;
+    }
+
+    .cornerCell,
+    .cardHead,
+    .rowLabel,
+    .groupLabel {
+        position: static;
+    }
+
+    .row {
+        break-inside: avoid;
+    }
 }

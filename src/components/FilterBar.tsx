@@ -1,3 +1,4 @@
+import { formatNetwork } from "../lib/cardFormatting";
 import type { Network, RewardType } from "../types/card";
 import FilterPill from "./FilterPill";
 import styles from "./FilterBar.module.css";
@@ -14,9 +15,13 @@ interface FilterBarProps {
   onToggleNetwork: (network: Network, checked: boolean) => void;
 
   rewardOptions: RewardOption[];
-  rewardCounts: Record<RewardType | "ALL", number>;
+  rewardCounts: Map<RewardType | "ALL", number>;
   selectedRewardType: RewardType | "ALL";
   onRewardChange: (value: RewardType | "ALL") => void;
+
+  noFeeCount: number;
+  requireNoAnnualFee: boolean;
+  onNoFeeChange: (checked: boolean) => void;
 
   noFxCount: number;
   requireNoFxFee: boolean;
@@ -27,7 +32,7 @@ interface FilterBarProps {
   onLoungeChange: (checked: boolean) => void;
 }
 
-/** Tier 2 of the controls: narrow the picked cards by network, reward, and perks. */
+/** Narrow the visible cards by network, reward, fees, and perks. */
 const FilterBar = ({
   networks,
   networkCounts,
@@ -37,6 +42,9 @@ const FilterBar = ({
   rewardCounts,
   selectedRewardType,
   onRewardChange,
+  noFeeCount,
+  requireNoAnnualFee,
+  onNoFeeChange,
   noFxCount,
   requireNoFxFee,
   onNoFxChange,
@@ -55,7 +63,7 @@ const FilterBar = ({
             return (
               <FilterPill
                 key={network}
-                label={network}
+                label={formatNetwork(network)}
                 count={count}
                 checked={isOn}
                 disabled={count === 0 && !isOn}
@@ -74,10 +82,15 @@ const FilterBar = ({
           id="reward-type"
           className={styles.select}
           value={selectedRewardType}
-          onChange={(event) => onRewardChange(event.target.value as RewardType | "ALL")}
+          onChange={(event) => {
+            const option = rewardOptions.find(({ value }) => value === event.target.value);
+            if (option) {
+              onRewardChange(option.value);
+            }
+          }}
         >
           {rewardOptions.map((option) => {
-            const count = rewardCounts[option.value];
+            const count = rewardCounts.get(option.value) ?? 0;
             return (
               <option
                 key={option.value}
@@ -92,8 +105,15 @@ const FilterBar = ({
       </div>
 
       <fieldset className={styles.filterGroup}>
-        <legend className={styles.filterGroupLabel}>Perks</legend>
+        <legend className={styles.filterGroupLabel}>Fees and perks</legend>
         <div className={styles.pillRow}>
+          <FilterPill
+            label="No annual fee"
+            count={noFeeCount}
+            checked={requireNoAnnualFee}
+            disabled={noFeeCount === 0 && !requireNoAnnualFee}
+            onChange={onNoFeeChange}
+          />
           <FilterPill
             label="No FX fee"
             count={noFxCount}

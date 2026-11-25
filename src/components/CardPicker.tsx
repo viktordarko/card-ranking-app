@@ -3,16 +3,14 @@ import styles from "./CardPicker.module.css";
 
 interface CardPickerProps {
   cards: Card[];
-  selectedIds: Set<string>;
+  pickedIds: Set<string>;
   onToggle: (id: string) => void;
-  onSelectAll: () => void;
   onClear: () => void;
 }
 
-/** Tier 1 of the controls: choose exactly which cards to line up. */
-const CardPicker = ({ cards, selectedIds, onToggle, onSelectAll, onClear }: CardPickerProps) => {
-  const allSelected = selectedIds.size === cards.length;
-  const noneSelected = selectedIds.size === 0;
+/** Choose exactly which cards to line up; with none picked, all are compared. */
+const CardPicker = ({ cards, pickedIds, onToggle, onClear }: CardPickerProps) => {
+  const nonePicked = pickedIds.size === 0;
 
   return (
     <div className={styles.picker}>
@@ -20,29 +18,22 @@ const CardPicker = ({ cards, selectedIds, onToggle, onSelectAll, onClear }: Card
         <span className={styles.pickerTitle}>Cards to compare</span>
         <span className={styles.pickerMeta}>
           <span>
-            {selectedIds.size} of {cards.length} selected
+            {nonePicked
+              ? "Comparing every card below. Pick cards to narrow it down."
+              : pickedIds.size === 1
+                ? "1 picked. Pick another to compare it with."
+                : `${pickedIds.size} of ${cards.length} picked`}
           </span>
-          <button
-            type="button"
-            className={styles.linkButton}
-            onClick={onSelectAll}
-            disabled={allSelected}
-          >
-            Select all
-          </button>
-          <button
-            type="button"
-            className={styles.linkButton}
-            onClick={onClear}
-            disabled={noneSelected}
-          >
-            Clear
-          </button>
+          {!nonePicked && (
+            <button type="button" className={styles.linkButton} onClick={onClear}>
+              Compare all
+            </button>
+          )}
         </span>
       </div>
       <div className={styles.cardPickerRow}>
         {cards.map((card) => {
-          const isOn = selectedIds.has(card.id);
+          const isOn = pickedIds.has(card.id);
           return (
             <label
               key={card.id}

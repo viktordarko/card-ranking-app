@@ -3,6 +3,7 @@ import { CARDS } from "../data/cards";
 import type { Card, EarnRate } from "../types/card";
 import {
   getCardValueUnit,
+  getFxFeePercent,
   toEstimatedBaseValuePercent,
   toEstimatedValuePercent,
 } from "./rewardValuation";
@@ -28,12 +29,12 @@ describe("getCardValueUnit", () => {
     expect(getCardValueUnit(cardById("amex-platinum-ca"))).toBe(2); // MR
     expect(getCardValueUnit(cardById("td-aeroplan-vi"))).toBe(2); // Aeroplan
     expect(getCardValueUnit(cardById("scotia-gold-amex"))).toBe(1); // Scene+
-    expect(getCardValueUnit(cardById("cibc-dividend-vi"))).toBe(1); // cash back
+    expect(getCardValueUnit(cardById("capital-one-quicksilver-we"))).toBe(1); // cash back
   });
 
   it("values flexible points above plain cash back (core design principle)", () => {
     expect(getCardValueUnit(cardById("amex-platinum-ca"))).toBeGreaterThan(
-      getCardValueUnit(cardById("cibc-dividend-vi")),
+      getCardValueUnit(cardById("capital-one-quicksilver-we")),
     );
     expect(getCardValueUnit(cardById("td-aeroplan-vi"))).toBeGreaterThan(
       getCardValueUnit(cardById("cibc-costco-mastercard")),
@@ -42,14 +43,12 @@ describe("getCardValueUnit", () => {
 
   it("keeps store-locked CT Money at full 1:1 value (its downside is redemption, not value)", () => {
     expect(getCardValueUnit(cardById("triangle-mastercard"))).toBe(
-      getCardValueUnit(cardById("cibc-dividend-vi")),
+      getCardValueUnit(cardById("capital-one-quicksilver-we")),
     );
   });
 
-  it("gives Rogers cash back its conditional redemption boost", () => {
-    expect(getCardValueUnit(cardById("rogers-world-elite"))).toBeGreaterThan(
-      getCardValueUnit(cardById("cibc-dividend-vi")),
-    );
+  it("values Rogers cash back at face value (the 1.5x bill boost ended Nov 17, 2026)", () => {
+    expect(getCardValueUnit(cardById("rogers-world-elite"))).toBe(1);
   });
 });
 
@@ -59,14 +58,14 @@ describe("toEstimatedValuePercent", () => {
     expect(toEstimatedValuePercent(amex, rateById(amex, "amex-plat-dining"))).toBe(4); // 2x × 2¢
 
     const rogers = cardById("rogers-world-elite");
-    expect(toEstimatedValuePercent(rogers, rateById(rogers, "rogers-usd"))).toBe(4.5); // 3% × 1.5
+    expect(toEstimatedValuePercent(rogers, rateById(rogers, "rogers-usd"))).toBe(3); // 3% × 1.0
   });
 
   it("ranks a 2x MR earn above a 2% cash-back earn", () => {
     const amex = cardById("amex-platinum-ca");
-    const dividend = cardById("cibc-dividend-vi");
+    const rogers = cardById("rogers-world-elite");
     expect(toEstimatedValuePercent(amex, rateById(amex, "amex-plat-dining"))).toBeGreaterThan(
-      toEstimatedValuePercent(dividend, rateById(dividend, "dividend-transit-dining-recurring")),
+      toEstimatedValuePercent(rogers, rateById(rogers, "rogers-base")),
     );
   });
 });
@@ -75,5 +74,12 @@ describe("toEstimatedBaseValuePercent", () => {
   it("uses the best general (non-bonus) rate", () => {
     expect(toEstimatedBaseValuePercent(cardById("amex-platinum-ca"))).toBe(2); // 1x × 2¢
     expect(toEstimatedBaseValuePercent(cardById("triangle-mastercard"))).toBe(0.5); // 0.5% × 1¢
+  });
+});
+
+describe("getFxFeePercent", () => {
+  it("is the stated fee, or 0 for a card that waives it", () => {
+    expect(getFxFeePercent(cardById("amex-platinum-ca"))).toBe(2.5);
+    expect(getFxFeePercent(cardById("scotia-gold-amex"))).toBe(0);
   });
 });

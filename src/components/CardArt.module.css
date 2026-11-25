@@ -1,0 +1,65 @@
+/* Sized in em, so the size classes only have to set one font-size. */
+.art {
+    position: relative;
+    display: block;
+    flex-shrink: 0;
+    width: 11em;
+    aspect-ratio: 1.586;
+    border-radius: 0.8em;
+    overflow: hidden;
+    color: #ffffff;
+    box-shadow:
+        0 1px 3px rgba(15, 23, 42, 0.25),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.sm {
+    font-size: 0.44rem;
+}
+
+.md {
+    font-size: 0.66rem;
+}
+
+.lg {
+    font-size: 1.15rem;
+}
+
+.inkDark {
+    color: #1f2937;
+}
+
+.name {
+    position: absolute;
+    top: 0.75em;
+    left: 0.85em;
+    right: 0.85em;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: left;
+}
+
+.chip {
+    position: absolute;
+    left: 0.85em;
+    bottom: 0.9em;
+    width: 1.7em;
+    height: 1.25em;
+    border-radius: 0.25em;
+    background: linear-gradient(135deg, #f3dfa2, #c9a24b);
+}
+
+.network {
+    position: absolute;
+    right: 0.85em;
+    bottom: 0.85em;
+    font-size: 0.85em;
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+/* At thumbnail size the text would be unreadable noise. */
+.sm .name,
+.sm .network {
+    display: none;
+}
